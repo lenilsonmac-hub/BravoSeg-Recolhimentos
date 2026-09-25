@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D0D0D">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="mobile-web-app-capable" content="yes">
+<title>BravoSeg — Recolhimentos</title>
+<link rel="manifest" href="data:application/json,{%22name%22:%22BravoSeg%20Recolhimentos%22,%22short_name%22:%22BravoSeg%22,%22start_url%22:%22/%22,%22display%22:%22standalone%22,%22background_color%22:%22%230D0D0D%22,%22theme_color%22:%22%23A51C1C%22,%22orientation%22:%22portrait%22,%22icons%22:[{%22src%22:%22data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMAAAADACAYAAABS3GwHAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAALEgAACxIB0t1+/AAAABZ0RVh0Q3JlYXRpb24gVGltZQAxMC8yOS8xMiCs1dkAAAAcdEVYdFNvZnR3YXJlAEFkb2JlIEZpcmV3b3JrcyBDUzVxteM2AAABHklEQVR4nO3BMQEAAADCoPVP7WsIoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeAMBOAABHgAAAABJRU5ErkJggg%3D%3D%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22}]}">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{--preto:#0D0D0D;--vermelho:#A51C1C;--branco:#FFFFFF;--cinza:#1a1a1a;--cinza2:#2a2a2a;--cinza3:#3a3a3a;--texto-sec:#999;--verde:#2d7a3a;--laranja:#c47a1a;--azul:#1a4a8a;}
+body{background:var(--preto);color:var(--branco);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+.header{background:var(--preto);border-bottom:2px solid var(--vermelho);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.header-logo{font-size:18px;font-weight:800;letter-spacing:1px;}
+.header-logo span{color:var(--vermelho);}
+.sync-indicator{font-size:11px;color:var(--texto-sec);display:flex;align-items:center;gap:4px;}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#555;}
+.sync-dot.online{background:#44cc44;}
+.sync-dot.syncing{background:var(--laranja);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+.client-tabs{display:flex;background:var(--cinza);border-bottom:1px solid #333;overflow-x:auto;scrollbar-width:none;}
+.client-tabs::-webkit-scrollbar{display:none;}
+.client-tab{flex:1;min-width:70px;padding:10px 4px;text-align:center;font-size:12px;font-weight:700;letter-spacing:0.5px;color:var(--texto-sec);cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;white-space:nowrap;}
+.client-tab.active{color:var(--branco);border-bottom-color:var(--vermelho);}
+
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--cinza);border-top:1px solid #333;display:flex;z-index:100;}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 4px;cursor:pointer;color:var(--texto-sec);transition:color 0.2s;}
+.nav-item.active{color:var(--vermelho);}
+.nav-icon{font-size:22px;margin-bottom:2px;}
+.nav-label{font-size:10px;font-weight:600;}
+
+.page{display:none;padding:12px 12px 80px;}
+.page.active{display:block;}
+
+.card{background:var(--cinza);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #333;position:relative;}
+.card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
+.placa{font-size:18px;font-weight:800;letter-spacing:1px;}
+.status-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.5px;}
+.status-pendente{background:#332200;color:#ffaa00;}
+.status-recolhido{background:#0d2b0d;color:#44cc44;}
+.status-devolvido{background:#0a1f3a;color:#4499ff;}
+.status-nao-loc{background:#2b0d0d;color:#ff4444;}
+.card-modelo{font-size:12px;color:var(--texto-sec);margin-bottom:6px;}
+.card-info{font-size:12px;color:#777;}
+.card-actions{display:flex;gap:8px;margin-top:10px;}
+.btn-sm{flex:1;padding:8px;border-radius:8px;border:none;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.3px;}
+.btn-primary{background:var(--vermelho);color:var(--branco);}
+.btn-secondary{background:var(--cinza3);color:var(--branco);}
+.btn-green{background:var(--verde);color:var(--branco);}
+.btn-blue{background:var(--azul);color:var(--branco);}
+.reincidencia{font-size:10px;color:var(--laranja);font-weight:600;margin-top:4px;}
+.tipo-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;}
+.tipo-inadimplencia{background:#332200;color:#ffaa00;}
+.tipo-furto{background:#2b0d0d;color:#ff4444;}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--texto-sec);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+
+.fin-header{background:var(--cinza2);border-radius:12px;padding:14px;margin-bottom:12px;}
+.fin-periodo{display:flex;gap:8px;margin-bottom:12px;}
+.fin-periodo select,.fin-periodo input{flex:1;background:var(--cinza3);border:1px solid #444;color:var(--branco);padding:8px;border-radius:8px;font-size:13px;}
+.fin-card{background:var(--cinza);border-radius:10px;padding:12px;margin-bottom:8px;border-left:3px solid var(--vermelho);}
+.fin-card-title{font-size:11px;color:var(--texto-sec);margin-bottom:4px;font-weight:600;text-transform:uppercase;}
+.fin-card-value{font-size:22px;font-weight:800;color:var(--branco);}
+.fin-card-detail{font-size:12px;color:var(--texto-sec);margin-top:4px;}
+.fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.btn-full{width:100%;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;letter-spacing:0.5px;margin-bottom:8px;}
+.consol-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #333;}
+.consol-item:last-child{border-bottom:none;}
+.consol-placa{font-size:14px;font-weight:700;}
+.consol-detail{font-size:12px;color:var(--texto-sec);}
+
+.form-group{margin-bottom:14px;}
+.form-label{font-size:12px;font-weight:700;color:var(--texto-sec);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;}
+.form-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:12px;border-radius:10px;font-size:15px;outline:none;}
+.form-input:focus{border-color:var(--vermelho);}
+.form-select{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:12px;border-radius:10px;font-size:15px;outline:none;appearance:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;align-items:flex-end;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:var(--cinza);border-radius:20px 20px 0 0;width:100%;max-height:92vh;overflow-y:auto;padding:20px 16px 32px;animation:slideUp 0.3s ease;}
+@keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+.modal-handle{width:40px;height:4px;background:#555;border-radius:2px;margin:0 auto 16px;}
+.modal-title{font-size:16px;font-weight:800;margin-bottom:16px;}
+.modal-placa{font-size:22px;font-weight:800;color:var(--vermelho);margin-bottom:4px;}
+.modal-sub{font-size:13px;color:var(--texto-sec);margin-bottom:16px;}
+.section-title{font-size:11px;font-weight:700;text-transform:uppercase;color:var(--texto-sec);letter-spacing:0.5px;margin:14px 0 8px;}
+.check-group{display:flex;flex-direction:column;gap:8px;}
+.check-item{display:flex;align-items:center;gap:10px;background:var(--cinza2);padding:10px 12px;border-radius:10px;cursor:pointer;}
+.check-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--vermelho);cursor:pointer;flex-shrink:0;}
+.check-item input[type=radio]{width:18px;height:18px;accent-color:var(--vermelho);cursor:pointer;flex-shrink:0;}
+.check-item label{font-size:14px;cursor:pointer;flex:1;}
+.obs-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:10px 12px;border-radius:10px;font-size:14px;min-height:80px;resize:none;outline:none;font-family:inherit;}
+.obs-input:focus{border-color:var(--vermelho);}
+.foto-area{border:2px dashed #444;border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:8px;}
+.foto-preview{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.foto-thumb{width:72px;height:72px;border-radius:8px;object-fit:cover;border:2px solid #444;}
+.foto-thumb-wrap{position:relative;}
+.foto-remove{position:absolute;top:-6px;right:-6px;background:var(--vermelho);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.divider{height:1px;background:#333;margin:14px 0;}
+.local-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:10px 12px;border-radius:10px;font-size:14px;outline:none;}
+.local-input:focus{border-color:var(--vermelho);}
+
+.report-text{background:var(--cinza2);border-radius:10px;padding:14px;font-size:13px;line-height:1.6;white-space:pre-wrap;font-family:monospace;color:#ddd;border:1px solid #333;max-height:300px;overflow-y:auto;}
+
+.search-bar{background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:10px 14px;border-radius:10px;width:100%;font-size:14px;outline:none;margin-bottom:12px;}
+.search-bar:focus{border-color:var(--vermelho);}
+
+.filter-row{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
+.filter-row::-webkit-scrollbar{display:none;}
+.filter-chip{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--cinza2);color:var(--texto-sec);border:1px solid #444;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.filter-chip.active{background:var(--vermelho);color:white;border-color:var(--vermelho);}
+
+.confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:300;align-items:center;justify-content:center;}
+.confirm-overlay.open{display:flex;}
+.confirm-box{background:var(--cinza);border-radius:16px;padding:24px;width:85%;max-width:320px;text-align:center;}
+.confirm-title{font-size:16px;font-weight:800;margin-bottom:8px;}
+.confirm-msg{font-size:13px;color:var(--texto-sec);margin-bottom:20px;line-height:1.5;}
+.confirm-btns{display:flex;gap:10px;}
+.confirm-btn{flex:1;padding:12px;border-radius:10px;border:none;font-size:14px;font-weight:700;cursor:pointer;}
+.confirm-cancel{background:var(--cinza3);color:var(--branco);}
+.confirm-ok{background:var(--vermelho);color:var(--branco);}
+
+.undo-bar{display:none;position:fixed;bottom:80px;left:12px;right:12px;background:#333;border-radius:12px;padding:12px 16px;z-index:150;align-items:center;justify-content:space-between;}
+.undo-bar.show{display:flex;}
+.undo-msg{font-size:13px;}
+.undo-btn{background:var(--vermelho);color:white;border:none;padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;}
+
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#333;color:white;padding:10px 20px;border-radius:20px;font-size:13px;z-index:999;opacity:0;transition:opacity 0.3s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;}
+
+.loading{text-align:center;padding:30px;color:var(--texto-sec);}
+.loading-spin{font-size:28px;animation:spin 1s linear infinite;display:inline-block;}
+@keyframes spin{from{transform:rotate(0deg);}to{transform:rotate(360deg);}}
+
+/* LOGIN */
+.login-overlay{display:flex;position:fixed;inset:0;background:#0D0D0D;z-index:999;flex-direction:column;align-items:center;justify-content:center;padding:32px;}
+.login-logo{font-size:32px;font-weight:900;letter-spacing:2px;margin-bottom:4px;}
+.login-logo span{color:var(--vermelho);}
+.login-sub{font-size:13px;color:var(--texto-sec);margin-bottom:40px;letter-spacing:1px;}
+.login-card{width:100%;max-width:340px;background:var(--cinza);border-radius:16px;padding:24px;border:1px solid #333;}
+.login-title{font-size:14px;font-weight:700;color:var(--texto-sec);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:16px;text-align:center;}
+.login-btn-group{display:flex;flex-direction:column;gap:10px;}
+.login-btn{width:100%;padding:16px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;letter-spacing:0.5px;}
+.login-btn-agente{background:var(--cinza3);color:var(--branco);}
+.login-btn-gestor{background:var(--vermelho);color:var(--branco);}
+.login-senha-wrap{display:none;margin-top:16px;}
+.login-senha-wrap.show{display:block;}
+.login-senha-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:12px;border-radius:10px;font-size:15px;outline:none;margin-bottom:10px;}
+.login-senha-input:focus{border-color:var(--vermelho);}
+.login-erro{color:#ff4444;font-size:12px;margin-bottom:8px;display:none;}
+.login-perfil-badge{font-size:11px;color:var(--texto-sec);display:flex;align-items:center;gap:4px;cursor:pointer;}
+.login-perfil-badge span{color:var(--vermelho);font-weight:700;}</style>
+</head>
+<body>
+
+<!-- LOGIN OVERLAY -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-logo">BRAVO<span>SEG</span></div>
+  <div class="login-sub">RECOLHIMENTOS</div>
+  <div class="login-card">
+    <div class="login-title">Entrar como</div>
+    <div class="login-btn-group">
+      <button class="login-btn login-btn-agente" onclick="entrarAgente()">👷 Agente</button>
+      <button class="login-btn login-btn-gestor" onclick="mostrarSenha()">🔐 Gestor</button>
+    </div>
+    <div class="login-senha-wrap" id="loginSenhaWrap">
+      <div class="login-erro" id="loginErro">Senha incorreta</div>
+      <input class="login-senha-input" id="loginSenhaInput" type="password" placeholder="Senha do gestor" onkeydown="if(event.key==='Enter')confirmarSenha()">
+      <button class="login-btn login-btn-gestor" onclick="confirmarSenha()">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="header">
+  <div class="header-logo">BRAVO<span>SEG</span></div>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="login-perfil-badge" id="perfilBadge" onclick="sair()">
+      <span id="perfilLabel">—</span> · Sair
+    </div>
+    <div class="sync-indicator">
+      <div class="sync-dot" id="syncDot"></div>
+      <span id="syncLabel">conectando...</span>
+    </div>
+  </div>
+</div>
+
+<div class="client-tabs">
+  <div class="client-tab active" data-client="MAVE" onclick="setCliente('MAVE',this)">MAVE</div>
+  <div class="client-tab" data-client="MOVVI" onclick="setCliente('MOVVI',this)">MOVVI</div>
+  <div class="client-tab" data-client="LOCAGORA" onclick="setCliente('LOCAGORA',this)">LOCAGORA</div>
+  <div class="client-tab" data-client="MOTTU" onclick="setCliente('MOTTU',this)">MOTTU</div>
+</div>
+
+<!-- LISTA -->
+<div class="page active" id="pageLista">
+  <input class="search-bar" id="searchInput" placeholder="🔍 Buscar placa ou modelo..." oninput="renderLista()">
+  <div class="filter-row">
+    <div class="filter-chip active" data-filter="todos" onclick="setFilter('todos',this)">Todos</div>
+    <div class="filter-chip" data-filter="pendente" onclick="setFilter('pendente',this)">Pendentes</div>
+    <div class="filter-chip" data-filter="recolhido" onclick="setFilter('recolhido',this)">Recolhidos</div>
+    <div class="filter-chip" data-filter="devolvido" onclick="setFilter('devolvido',this)">Devolvidos</div>
+    <div class="filter-chip" data-filter="nao_localizado" onclick="setFilter('nao_localizado',this)">Não Loc.</div>
+  </div>
+  <div id="listaContainer"><div class="loading"><div class="loading-spin">🔄</div><div style="margin-top:10px;font-size:13px;">Carregando...</div></div></div>
+</div>
+
+<!-- FINANCEIRO -->
+<div class="page" id="pageFinanceiro">
+  <div class="fin-header">
+    <div class="section-title" style="margin-top:0">Período</div>
+    <div class="fin-periodo">
+      <select id="tipoPeriodo" onchange="calcFinanceiro()">
+        <option value="hoje">Hoje</option>
+        <option value="semana">Esta Semana</option>
+        <option value="mes" selected>Este Mês</option>
+        <option value="personalizado">Personalizado</option>
+      </select>
+      <input type="month" id="mesSelecionado" value="" style="display:none" onchange="calcFinanceiro()">
+    </div>
+    <div id="periodoDisplay" style="font-size:12px;color:var(--texto-sec);margin-bottom:8px;"></div>
+  </div>
+  <div class="fin-grid">
+    <div class="fin-card">
+      <div class="fin-card-title">Recolhimentos</div>
+      <div class="fin-card-value" id="finTotal">—</div>
+      <div class="fin-card-detail" id="finTotalDetalhe"></div>
+    </div>
+    <div class="fin-card" style="border-color:var(--verde)">
+      <div class="fin-card-title">Valor Total</div>
+      <div class="fin-card-value" id="finValor">—</div>
+      <div class="fin-card-detail" id="finValorDetalhe"></div>
+    </div>
+  </div>
+  <div id="finBreakdown"></div>
+  <button class="btn-full btn-primary" onclick="gerarRelatorioFinanceiro()">📋 Gerar Relatório Financeiro</button>
+  <button class="btn-full btn-secondary" id="btnConsolidado" onclick="gerarConsolidadoDia()" style="display:none">📦 Consolidado Diário</button>
+</div>
+
+<!-- CADASTRO -->
+<div class="page" id="pageCadastro">
+  <div style="margin-bottom:16px;">
+    <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Cadastrar Moto</div>
+    <div style="font-size:12px;color:var(--texto-sec);">Gestor registra — aparece para todos os agentes</div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Placa *</label>
+    <input class="form-input" id="cadPlaca" placeholder="ABC-1D23" maxlength="8" oninput="this.value=this.value.toUpperCase()">
+  </div>
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Modelo</label>
+      <input class="form-input" id="cadModelo" placeholder="Ex: Avelloz 160">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Cor</label>
+      <input class="form-input" id="cadCor" placeholder="Ex: Preta">
+    </div>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Tipo de Ocorrência</label>
+    <select class="form-select" id="cadTipo">
+      <option value="inadimplencia">Inadimplência / Recolhimento</option>
+      <option value="furto">Furto / Roubo</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Cliente</label>
+    <select class="form-select" id="cadCliente">
+      <option value="MAVE">MAVE</option>
+      <option value="MOVVI">MOVVI</option>
+      <option value="LOCAGORA">LOCAGORA</option>
+      <option value="MOTTU">MOTTU</option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label class="form-label">Observação Inicial (opcional)</label>
+    <textarea class="obs-input" id="cadObs" placeholder="Informações adicionais, endereço, contato..."></textarea>
+  </div>
+  <button class="btn-full btn-primary" onclick="cadastrarMoto()" style="margin-top:8px;">✅ Cadastrar Moto</button>
+  <button class="btn-full btn-secondary" onclick="setPage('Lista')" style="margin-top:4px;">← Voltar para Lista</button>
+</div>
+
+<!-- MODAL RECOLHIMENTO -->
+<div class="modal-overlay" id="modalRecolhimento">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Registrar Recolhimento</div>
+    <div class="modal-placa" id="modalPlaca">—</div>
+    <div class="modal-sub" id="modalSub">—</div>
+
+    <div class="section-title">Status do Veículo</div>
+    <div class="check-group">
+      <div class="check-item"><input type="checkbox" id="chkComPlaca"><label for="chkComPlaca">Com placa</label></div>
+      <div class="check-item"><input type="checkbox" id="chkSemPlaca"><label for="chkSemPlaca">Sem placa</label></div>
+      <div class="check-item"><input type="checkbox" id="chkComChave"><label for="chkComChave">Com chave</label></div>
+      <div class="check-item"><input type="checkbox" id="chkSemChave"><label for="chkSemChave">Sem chave</label></div>
+      <div class="check-item"><input type="checkbox" id="chkAvarias"><label for="chkAvarias">Avarias visíveis</label></div>
+    </div>
+
+    <div class="section-title">Situação na Abordagem</div>
+    <div class="check-group">
+      <div class="check-item"><input type="radio" name="situacao" id="sitVoluntaria" value="Entregue voluntariamente"><label for="sitVoluntaria">Entregue voluntariamente</label></div>
+      <div class="check-item"><input type="radio" name="situacao" id="sitResistVerb" value="Resistência verbal — resolvida"><label for="sitResistVerb">Resistência verbal — resolvida</label></div>
+      <div class="check-item"><input type="radio" name="situacao" id="sitResistFis" value="Resistência física — resolvida"><label for="sitResistFis">Resistência física — resolvida</label></div>
+      <div class="check-item"><input type="radio" name="situacao" id="sitAusente" value="Ausente — recolhida no local"><label for="sitAusente">Ausente — recolhida no local</label></div>
+      <div class="check-item"><input type="radio" name="situacao" id="sitTerceiros" value="Terceiros entregaram"><label for="sitTerceiros">Terceiros entregaram</label></div>
+      <div class="check-item"><input type="radio" name="situacao" id="sitNaoLoc" value="Ausente — não localizada"><label for="sitNaoLoc">Ausente — não localizada ❌</label></div>
+    </div>
+
+    <div class="section-title">Quem Estava com a Moto</div>
+    <div class="check-group">
+      <div class="check-item"><input type="radio" name="quem" id="quemLocatario" value="Locatário"><label for="quemLocatario">Locatário</label></div>
+      <div class="check-item"><input type="radio" name="quem" id="quemFamiliar" value="Familiar"><label for="quemFamiliar">Familiar</label></div>
+      <div class="check-item"><input type="radio" name="quem" id="quemTerceiro" value="Terceiro"><label for="quemTerceiro">Terceiro</label></div>
+    </div>
+
+    <div class="section-title">Local da Abordagem</div>
+    <input class="local-input" id="modalLocal" placeholder="Ex: Locadora de Castanhal, Bairro do Aurá...">
+
+    <div class="section-title">Observações</div>
+    <textarea class="obs-input" id="modalObs" placeholder="Descreva detalhes da ocorrência..."></textarea>
+
+    <div class="section-title">Foto com Timestamp</div>
+    <div class="foto-area" onclick="document.getElementById('fotoInput').click()">
+      <div style="font-size:32px;margin-bottom:6px;">📷</div>
+      <div style="font-size:13px;color:var(--texto-sec);">Toque para tirar foto</div>
+      <div style="font-size:11px;color:#666;margin-top:4px;">Timestamp automático registrado</div>
+    </div>
+    <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none" multiple onchange="processarFotos(event)">
+    <div class="foto-preview" id="fotoPreview"></div>
+
+    <div class="divider"></div>
+    <button class="btn-full btn-primary" onclick="confirmarRecolhimento()" style="margin-bottom:8px;">✅ Confirmar Recolhimento</button>
+    <button class="btn-full btn-secondary" onclick="fecharModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL RELATÓRIO -->
+<div class="modal-overlay" id="modalRelatorio">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="relatorioTitulo">Relatório</div>
+    <div class="report-text" id="relatorioTexto"></div>
+    <div class="divider"></div>
+    <button class="btn-full btn-green" onclick="copiarRelatorio()" style="margin-bottom:8px;">📋 Copiar para WhatsApp</button>
+    <button class="btn-full btn-secondary" onclick="document.getElementById('modalRelatorio').classList.remove('open')">Fechar</button>
+  </div>
+</div>
+
+<!-- MODAL DEVOLUÇÃO -->
+<div class="modal-overlay" id="modalDevolucao">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Registrar Devolução</div>
+    <div class="modal-placa" id="devPlaca">—</div>
+    <div class="modal-sub" id="devSub">—</div>
+    <div class="section-title">Quem Recebeu</div>
+    <input class="local-input" id="devRecebedor" placeholder="Nome de quem recebeu na locadora..." style="margin-bottom:12px;">
+    <div class="section-title">Local de Devolução</div>
+    <input class="local-input" id="devLocal" placeholder="Ex: Locadora Mave Castanhal..." style="margin-bottom:12px;">
+    <button class="btn-full btn-primary" onclick="confirmarDevolucao()" style="margin-bottom:8px;">✅ Confirmar Devolução</button>
+    <button class="btn-full btn-secondary" onclick="document.getElementById('modalDevolucao').classList.remove('open')">Cancelar</button>
+  </div>
+</div>
+
+<!-- CONFIRM -->
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirmTitle">Confirmar</div>
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-btns">
+      <button class="confirm-btn confirm-cancel" onclick="confirmReject()">Cancelar</button>
+      <button class="confirm-btn confirm-ok" onclick="confirmAccept()">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <div class="nav-item active" id="navLista" onclick="setPage('Lista')">
+    <div class="nav-icon">🏍️</div>
+    <div class="nav-label">Lista</div>
+  </div>
+  <div class="nav-item" id="navFinanceiro" onclick="setPage('Financeiro')">
+    <div class="nav-icon">💰</div>
+    <div class="nav-label">Financeiro</div>
+  </div>
+  <div class="nav-item" id="navCadastro" onclick="setPage('Cadastro')">
+    <div class="nav-icon">➕</div>
+    <div class="nav-label">Cadastrar</div>
+  </div>
+</div>
+
+<!-- UNDO -->
+<div class="undo-bar" id="undoBar">
+  <span class="undo-msg" id="undoMsg">Ação realizada</span>
+  <button class="undo-btn" onclick="undoAcao()">↩ Desfazer</button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== SUPABASE ==========
+const SUPABASE_URL = 'https://delngkkleatwjtjoyjck.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlbG5na2tsZWF0d2p0am95amNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNzExNzgsImV4cCI6MjEwNTk0NzE3OH0.STg-kKmWcDu5gM9Y_UP3Zzvv6IMXPcLirDOwNYtFCfY';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ========== AUTH ==========
+let perfilAtual = null; // 'agente' ou 'gestor'
+
+async function sha256(texto) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function mostrarSenha() {
+  document.getElementById('loginSenhaWrap').classList.add('show');
+  document.getElementById('loginErro').style.display = 'none';
+  document.getElementById('loginSenhaInput').focus();
+}
+
+async function confirmarSenha() {
+  const v = document.getElementById('loginSenhaInput').value;
+  if(!v) return;
+  const btnEntrar = document.querySelector('#loginSenhaWrap .login-btn-gestor');
+  btnEntrar.textContent = 'Verificando...';
+  btnEntrar.disabled = true;
+  try {
+    const hash = await sha256(v);
+    const { data, error } = await sb.from('config').select('valor').eq('chave','senha_gestor_hash').single();
+    if(!error && data && data.valor === hash) {
+      entrar('gestor');
+    } else {
+      document.getElementById('loginErro').style.display = 'block';
+      document.getElementById('loginSenhaInput').value = '';
+    }
+  } catch(e) {
+    document.getElementById('loginErro').textContent = 'Erro de conexão. Tente novamente.';
+    document.getElementById('loginErro').style.display = 'block';
+  }
+  btnEntrar.textContent = 'Entrar';
+  btnEntrar.disabled = false;
+}
+
+function entrarAgente() { entrar('agente'); }
+
+function entrar(perfil) {
+  perfilAtual = perfil;
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('perfilLabel').textContent = perfil === 'gestor' ? 'Gestor' : 'Agente';
+  // Controla visibilidade de Financeiro e Cadastrar
+  const navFin = document.getElementById('navFinanceiro');
+  const navCad = document.getElementById('navCadastro');
+  if(perfil === 'agente') {
+    navFin.style.display = 'none';
+    navCad.style.display = 'none';
+  } else {
+    navFin.style.display = '';
+    navCad.style.display = '';
+  }
+  iniciarApp();
+}
+
+function sair() {
+  perfilAtual = null;
+  document.getElementById('loginSenhaWrap').classList.remove('show');
+  document.getElementById('loginSenhaInput').value = '';
+  document.getElementById('loginErro').style.display = 'none';
+  document.getElementById('loginOverlay').style.display = 'flex';
+}
+
+// ========== STATE ==========
+let clienteAtual = 'MAVE';
+let paginaAtual = 'Lista';
+let filtroAtual = 'todos';
+let motoAtual = null;
+let fotosCapturadas = [];
+let ultimaAcao = null;
+let undoTimer = null;
+let confirmCallback = null;
+let motosCache = {};
+let realtimeSub = null;
+
+const VALORES = {
+  MAVE:     { inadimplencia: null, furto: 450 },
+  MOVVI:    { inadimplencia: 300,  furto: null },
+  LOCAGORA: { inadimplencia: 300,  furto: null },
+  MOTTU:    { inadimplencia: null, furto: null },
+};
+
+// ========== SYNC STATUS ==========
+function setSyncStatus(status) {
+  const dot = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  dot.className = 'sync-dot ' + status;
+  if(status==='online') label.textContent = 'sincronizado';
+  else if(status==='syncing') label.textContent = 'salvando...';
+  else label.textContent = 'offline';
+}
+
+// ========== SUPABASE CRUD ==========
+async function carregarMotos(cliente) {
+  try {
+    const { data, error } = await sb.from('motos').select('*').eq('cliente', cliente).order('created_at', {ascending: false});
+    if(error) throw error;
+    // Ordenar: pendente primeiro, depois recolhido, devolvido, nao_localizado
+    const ord = {pendente:0, recolhido:1, devolvido:2, nao_localizado:3};
+    data.sort((a,b) => (ord[a.status]||0) - (ord[b.status]||0));
+    motosCache[cliente] = data;
+    setSyncStatus('online');
+    return data;
+  } catch(e) {
+    console.error(e);
+    setSyncStatus('offline');
+    return motosCache[cliente] || [];
+  }
+}
+
+async function salvarMoto(moto) {
+  setSyncStatus('syncing');
+  try {
+    const row = motoParaRow(moto);
+    const { error } = await sb.from('motos').upsert(row, {onConflict: 'id'});
+    if(error) throw error;
+    // Atualiza cache local
+    if(!motosCache[moto.cliente]) motosCache[moto.cliente] = [];
+    const idx = motosCache[moto.cliente].findIndex(m=>m.id===moto.id);
+    if(idx>=0) motosCache[moto.cliente][idx] = row; else motosCache[moto.cliente].unshift(row);
+    setSyncStatus('online');
+    return true;
+  } catch(e) {
+    console.error(e);
+    setSyncStatus('offline');
+    return false;
+  }
+}
+
+async function removerMoto(id, cliente) {
+  setSyncStatus('syncing');
+  try {
+    const { error } = await sb.from('motos').delete().eq('id', id);
+    if(error) throw error;
+    if(motosCache[cliente]) motosCache[cliente] = motosCache[cliente].filter(m=>m.id!==id);
+    setSyncStatus('online');
+    return true;
+  } catch(e) {
+    setSyncStatus('offline');
+    return false;
+  }
+}
+
+async function getReincidencia(chave) {
+  try {
+    const { data } = await sb.from('historico_reincidencia').select('*').eq('chave', chave).single();
+    return data;
+  } catch(e) { return null; }
+}
+
+async function salvarReincidencia(chave, count, ultima) {
+  try {
+    await sb.from('historico_reincidencia').upsert({chave, count, ultima}, {onConflict: 'chave'});
+  } catch(e) {}
+}
+
+function motoParaRow(m) {
+  return {
+    id: m.id,
+    cliente: m.cliente,
+    placa: m.placa,
+    modelo: m.modelo || null,
+    cor: m.cor || null,
+    tipo: m.tipo || 'inadimplencia',
+    status: m.status || 'pendente',
+    obs: m.obs || null,
+    local_abordagem: m.local || null,
+    situacao: m.situacao || null,
+    quem: m.quem || null,
+    data_recolhimento: m.dataRecolhimento || null,
+    hora_recolhimento: m.horaRecolhimento || null,
+    status_veiculo: m.statusVeiculo || null,
+    fotos: m.fotos || null,
+    dev_recebedor: m.devRecebedor || null,
+    dev_local: m.devLocal || null,
+    data_devolucao: m.dataDevolucao || null,
+    hora_devolucao: m.horaDevolucao || null,
+    data_cadastro: m.dataCadastro || null,
+    reincidencia: m.reincidencia || 0,
+    ultima_recuperacao: m.ultimaRecuperacao || null,
+  };
+}
+
+function rowParaMoto(r) {
+  return {
+    id: r.id,
+    cliente: r.cliente,
+    placa: r.placa,
+    modelo: r.modelo,
+    cor: r.cor,
+    tipo: r.tipo,
+    status: r.status,
+    obs: r.obs,
+    local: r.local_abordagem,
+    situacao: r.situacao,
+    quem: r.quem,
+    dataRecolhimento: r.data_recolhimento,
+    horaRecolhimento: r.hora_recolhimento,
+    statusVeiculo: r.status_veiculo,
+    fotos: r.fotos,
+    devRecebedor: r.dev_recebedor,
+    devLocal: r.dev_local,
+    dataDevolucao: r.data_devolucao,
+    horaDevolucao: r.hora_devolucao,
+    dataCadastro: r.data_cadastro,
+    reincidencia: r.reincidencia || 0,
+    ultimaRecuperacao: r.ultima_recuperacao,
+  };
+}
+
+function gerarId() { return Date.now()+'_'+Math.random().toString(36).slice(2,7); }
+
+// ========== REALTIME ==========
+function ativarRealtime(cliente) {
+  if(realtimeSub) { sb.removeChannel(realtimeSub); realtimeSub = null; }
+  realtimeSub = sb.channel('motos_'+cliente)
+    .on('postgres_changes', {event:'*', schema:'public', table:'motos', filter:`cliente=eq.${cliente}`}, payload => {
+      // Atualiza cache e re-renderiza
+      if(!motosCache[cliente]) motosCache[cliente] = [];
+      if(payload.eventType === 'DELETE') {
+        motosCache[cliente] = motosCache[cliente].filter(m=>m.id!==payload.old.id);
+      } else if(payload.eventType === 'INSERT') {
+        const existe = motosCache[cliente].find(m=>m.id===payload.new.id);
+        if(!existe) motosCache[cliente].unshift(payload.new);
+      } else if(payload.eventType === 'UPDATE') {
+        const idx = motosCache[cliente].findIndex(m=>m.id===payload.new.id);
+        if(idx>=0) motosCache[cliente][idx] = payload.new; else motosCache[cliente].unshift(payload.new);
+      }
+      if(paginaAtual==='Lista') renderLista();
+      if(paginaAtual==='Financeiro') calcFinanceiro();
+    })
+    .subscribe();
+}
+
+// ========== NAVEGAÇÃO ==========
+function setPage(p) {
+  paginaAtual = p;
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page'+p).classList.add('active');
+  document.getElementById('nav'+p).classList.add('active');
+  if(p==='Lista') carregarERendar();
+  if(p==='Financeiro') calcFinanceiro();
+  if(p==='Cadastro') document.getElementById('cadCliente').value = clienteAtual;
+}
+
+function setCliente(c, el) {
+  clienteAtual = c;
+  document.querySelectorAll('.client-tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ativarRealtime(c);
+  if(paginaAtual==='Lista') carregarERendar();
+  if(paginaAtual==='Financeiro') calcFinanceiro();
+  if(paginaAtual==='Cadastro') document.getElementById('cadCliente').value = c;
+}
+
+function setFilter(f, el) {
+  filtroAtual = f;
+  document.querySelectorAll('.filter-chip').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  renderLista();
+}
+
+async function carregarERendar() {
+  document.getElementById('listaContainer').innerHTML = '<div class="loading"><div class="loading-spin">🔄</div><div style="margin-top:10px;font-size:13px;">Carregando...</div></div>';
+  await carregarMotos(clienteAtual);
+  renderLista();
+}
+
+// ========== LISTA ==========
+function statusLabel(s){ const m={pendente:'Pendente',recolhido:'Recolhido',devolvido:'Devolvido',nao_localizado:'Não Loc.'}; return m[s]||s; }
+function statusClass(s){ const m={pendente:'status-pendente',recolhido:'status-recolhido',devolvido:'status-devolvido',nao_localizado:'status-nao-loc'}; return m[s]||'status-pendente'; }
+
+function renderLista() {
+  const container = document.getElementById('listaContainer');
+  const busca = (document.getElementById('searchInput').value||'').toUpperCase().trim();
+  let rows = motosCache[clienteAtual] || [];
+
+  const ord = {pendente:0, recolhido:1, devolvido:2, nao_localizado:3};
+  rows = [...rows].sort((a,b)=>(ord[a.status]||0)-(ord[b.status]||0));
+
+  if(filtroAtual !== 'todos') rows = rows.filter(r=>r.status===filtroAtual);
+  if(busca) rows = rows.filter(r=>(r.placa+' '+(r.modelo||'')+' '+(r.cor||'')).toUpperCase().includes(busca));
+
+  if(!rows.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">🏍️</div><div>Nenhuma moto aqui</div><div style="font-size:12px;margin-top:6px;color:#666;">Use "Cadastrar" para adicionar</div></div>';
+    return;
+  }
+
+  container.innerHTML = rows.map(r => {
+    const m = rowParaMoto(r);
+    const tipoBadge = m.tipo==='furto'
+      ? `<span class="tipo-badge tipo-furto">FURTO</span>`
+      : `<span class="tipo-badge tipo-inadimplencia">INADIMP.</span>`;
+    const reincBadge = (m.reincidencia||0)>0
+      ? `<div class="reincidencia">⚠️ Reincidente ${m.reincidencia}x · Última: ${m.ultimaRecuperacao||'—'}</div>`
+      : '';
+
+    let btns = '';
+    if(m.status==='pendente'){
+      btns = `<button class="btn-sm btn-primary" onclick="abrirRecolhimento('${m.id}')">📋 Registrar</button>
+              <button class="btn-sm btn-secondary" onclick="confirmarExclusao('${m.id}')">🗑️</button>`;
+    } else if(m.status==='recolhido' && clienteAtual==='MAVE'){
+      btns = `<button class="btn-sm btn-green" onclick="abrirDevolucao('${m.id}')">📦 Devolver</button>
+              <button class="btn-sm btn-blue" onclick="verRelatorio('${m.id}')">📋 Ver</button>
+              <button class="btn-sm btn-secondary" onclick="confirmarUndo('${m.id}')">↩</button>`;
+    } else if(m.status==='recolhido'){
+      btns = `<button class="btn-sm btn-blue" onclick="verRelatorio('${m.id}')">📋 Ver</button>
+              <button class="btn-sm btn-secondary" onclick="confirmarUndo('${m.id}')">↩ Desfazer</button>`;
+    } else {
+      btns = `<button class="btn-sm btn-blue" onclick="verRelatorio('${m.id}')">📋 Ver</button>
+              <button class="btn-sm btn-secondary" onclick="confirmarUndo('${m.id}')">↩</button>`;
+    }
+
+    const info = [];
+    if(m.dataRecolhimento) info.push('📅 '+m.dataRecolhimento);
+    if(m.local) info.push('📍 '+m.local);
+    if(m.devRecebedor) info.push('👤 '+m.devRecebedor);
+
+    return `<div class="card">
+      <div class="card-header">
+        <div>
+          <div class="placa">${m.placa} ${tipoBadge}</div>
+          <div class="card-modelo">${m.modelo||''} ${m.cor||''}</div>
+        </div>
+        <span class="status-badge ${statusClass(m.status)}">${statusLabel(m.status)}</span>
+      </div>
+      ${info.length?`<div class="card-info">${info.join(' · ')}</div>`:''}
+      ${reincBadge}
+      <div class="card-actions">${btns}</div>
+    </div>`;
+  }).join('');
+}
+
+// ========== CADASTRO ==========
+async function cadastrarMoto() {
+  const placa = document.getElementById('cadPlaca').value.trim().toUpperCase();
+  if(!placa){ showToast('❌ Placa obrigatória'); return; }
+  const cliente = document.getElementById('cadCliente').value;
+
+  // Verificar reincidência
+  const chave = cliente+'_'+placa;
+  const rec = await getReincidencia(chave);
+
+  const moto = {
+    id: gerarId(),
+    placa, cliente,
+    modelo: document.getElementById('cadModelo').value.trim(),
+    cor: document.getElementById('cadCor').value.trim(),
+    tipo: document.getElementById('cadTipo').value,
+    status: 'pendente',
+    obs: document.getElementById('cadObs').value.trim(),
+    dataCadastro: new Date().toLocaleDateString('pt-BR'),
+    reincidencia: rec ? rec.count : 0,
+    ultimaRecuperacao: rec ? rec.ultima : null,
+  };
+
+  showToast('⏳ Salvando...');
+  const ok = await salvarMoto(moto);
+  if(ok) {
+    ['cadPlaca','cadModelo','cadCor','cadObs'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('cadTipo').value='inadimplencia';
+    clienteAtual = cliente;
+    showToast('✅ Moto cadastrada!');
+    setTimeout(()=>setPage('Lista'), 800);
+  } else {
+    showToast('❌ Erro ao salvar. Verifique a conexão.');
+  }
+}
+
+// ========== MODAL RECOLHIMENTO ==========
+function abrirRecolhimento(id) {
+  const rows = motosCache[clienteAtual] || [];
+  const r = rows.find(m=>m.id===id);
+  if(!r) return;
+  motoAtual = rowParaMoto(r);
+
+  document.getElementById('modalPlaca').textContent = motoAtual.placa;
+  document.getElementById('modalSub').textContent = [motoAtual.modelo,motoAtual.cor].filter(Boolean).join(' — ')||'—';
+
+  ['chkComPlaca','chkSemPlaca','chkComChave','chkSemChave','chkAvarias'].forEach(id=>document.getElementById(id).checked=false);
+  document.querySelectorAll('input[name="situacao"]').forEach(r=>r.checked=false);
+  document.querySelectorAll('input[name="quem"]').forEach(r=>r.checked=false);
+  document.getElementById('modalLocal').value = '';
+  document.getElementById('modalObs').value = motoAtual.obs||'';
+  fotosCapturadas = [];
+  document.getElementById('fotoPreview').innerHTML = '';
+  document.getElementById('chkComPlaca').checked = true;
+  document.getElementById('chkComChave').checked = true;
+
+  document.getElementById('modalRecolhimento').classList.add('open');
+}
+
+function fecharModal() {
+  document.getElementById('modalRecolhimento').classList.remove('open');
+  motoAtual = null;
+}
+
+function processarFotos(event) {
+  Array.from(event.target.files).forEach(file=>{
+    const reader = new FileReader();
+    reader.onload = e => {
+      const ts = new Date().toLocaleDateString('pt-BR')+' '+new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      fotosCapturadas.push({data:e.target.result, timestamp:ts});
+      renderFotoPreview();
+    };
+    reader.readAsDataURL(file);
+  });
+  event.target.value='';
+}
+
+function renderFotoPreview() {
+  document.getElementById('fotoPreview').innerHTML = fotosCapturadas.map((f,i)=>`
+    <div class="foto-thumb-wrap">
+      <img class="foto-thumb" src="${f.data}" title="${f.timestamp}">
+      <button class="foto-remove" onclick="removerFoto(${i})">×</button>
+    </div>`).join('');
+}
+
+function removerFoto(i){ fotosCapturadas.splice(i,1); renderFotoPreview(); }
+
+async function confirmarRecolhimento() {
+  if(!motoAtual) return;
+  const situacao = document.querySelector('input[name="situacao"]:checked');
+  if(!situacao){ showToast('❌ Selecione a situação'); return; }
+
+  const quem = document.querySelector('input[name="quem"]:checked');
+  const agora = new Date();
+  const naoLoc = situacao.value === 'Ausente — não localizada';
+
+  ultimaAcao = { tipo:'recolhimento', motoAnterior: JSON.parse(JSON.stringify(motoAtual)) };
+
+  motoAtual.status = naoLoc ? 'nao_localizado' : 'recolhido';
+  motoAtual.situacao = situacao.value;
+  motoAtual.quem = quem ? quem.value : null;
+  motoAtual.local = document.getElementById('modalLocal').value.trim();
+  motoAtual.obs = document.getElementById('modalObs').value.trim();
+  motoAtual.dataRecolhimento = agora.toLocaleDateString('pt-BR');
+  motoAtual.horaRecolhimento = agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  motoAtual.statusVeiculo = {
+    comPlaca: document.getElementById('chkComPlaca').checked,
+    semPlaca: document.getElementById('chkSemPlaca').checked,
+    comChave: document.getElementById('chkComChave').checked,
+    semChave: document.getElementById('chkSemChave').checked,
+    avarias: document.getElementById('chkAvarias').checked,
+  };
+  motoAtual.fotos = fotosCapturadas.map(f=>f.timestamp);
+
+  // Atualizar reincidência
+  const chave = motoAtual.cliente+'_'+motoAtual.placa;
+  if(!naoLoc) {
+    const rec = await getReincidencia(chave);
+    const novoCount = (rec ? rec.count : 0) + 1;
+    if(novoCount > 1) {
+      motoAtual.reincidencia = novoCount - 1;
+      motoAtual.ultimaRecuperacao = motoAtual.dataRecolhimento;
+    }
+    await salvarReincidencia(chave, novoCount, motoAtual.dataRecolhimento);
+  }
+
+  fecharModal();
+  const ok = await salvarMoto(motoAtual);
+  renderLista();
+  if(ok) {
+    showUndoBar('Recolhimento registrado');
+    setTimeout(()=>mostrarRelatorio(motoAtual), 400);
+  } else {
+    showToast('❌ Erro ao salvar. Tente novamente.');
+  }
+}
+
+// ========== DEVOLUÇÃO ==========
+function abrirDevolucao(id) {
+  const r = (motosCache[clienteAtual]||[]).find(m=>m.id===id);
+  if(!r) return;
+  motoAtual = rowParaMoto(r);
+  document.getElementById('devPlaca').textContent = motoAtual.placa;
+  document.getElementById('devSub').textContent = [motoAtual.modelo,motoAtual.cor].filter(Boolean).join(' — ')||'—';
+  document.getElementById('devRecebedor').value = '';
+  document.getElementById('devLocal').value = 'Locadora Mave';
+  document.getElementById('modalDevolucao').classList.add('open');
+}
+
+async function confirmarDevolucao() {
+  if(!motoAtual) return;
+  ultimaAcao = { tipo:'devolucao', motoAnterior: JSON.parse(JSON.stringify(motoAtual)) };
+  const agora = new Date();
+  motoAtual.status = 'devolvido';
+  motoAtual.devRecebedor = document.getElementById('devRecebedor').value.trim();
+  motoAtual.devLocal = document.getElementById('devLocal').value.trim();
+  motoAtual.dataDevolucao = agora.toLocaleDateString('pt-BR');
+  motoAtual.horaDevolucao = agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  document.getElementById('modalDevolucao').classList.remove('open');
+  await salvarMoto(motoAtual);
+  renderLista();
+  showUndoBar('Devolução registrada');
+}
+
+// ========== RELATÓRIO ==========
+function formatarCheckbox(val){ return val?'☑':'☐'; }
+
+function gerarTextoRelatorio(m) {
+  const tipo = m.status==='nao_localizado'?'OCORRÊNCIA':'RECOLHIMENTO';
+  const sv = m.statusVeiculo||{};
+  const nomes = {MAVE:'Mave Locadora',MOVVI:'Movvi Locadora',LOCAGORA:'Locagora',MOTTU:'Mottu'};
+
+  let txt = `🏍️ ${tipo} · BravoSeg\n\n`;
+  txt += `*Cliente:* ${nomes[m.cliente]||m.cliente}\n`;
+  txt += `🪧 *Placa:* ${m.placa}\n`;
+  if(m.modelo||m.cor) txt += `🏍️ *Modelo/Cor:* ${[m.modelo,m.cor].filter(Boolean).join(' ')}\n`;
+  txt += `📍 *Local:* ${m.local||'—'}\n`;
+  txt += `📅 *Data:* ${m.dataRecolhimento||'—'}\n`;
+  txt += `🕐 *Horário:* ${m.horaRecolhimento||'—'}\n\n`;
+  txt += `Status do veículo:\n`;
+  txt += `${formatarCheckbox(sv.comPlaca)} Com placa\n`;
+  txt += `${formatarCheckbox(sv.semPlaca)} Sem placa\n`;
+  txt += `${formatarCheckbox(sv.comChave)} Com chave\n`;
+  txt += `${formatarCheckbox(sv.semChave)} Sem chave\n`;
+  txt += `${formatarCheckbox(sv.avarias)} Avarias visíveis\n\n`;
+  txt += `Situação na abordagem:\n`;
+  ['Entregue voluntariamente','Resistência verbal — resolvida','Resistência física — resolvida','Ausente — recolhida no local','Terceiros entregaram','Ausente — não localizada'].forEach(s=>{
+    txt += `${formatarCheckbox(m.situacao===s)} ${s}\n`;
+  });
+  txt += `\nQuem estava com a moto:\n`;
+  ['Locatário','Familiar','Terceiro'].forEach(q=>{ txt += `${formatarCheckbox(m.quem===q)} ${q} `; });
+  txt += '\n';
+  if(m.obs) txt += `\nObservação: ${m.obs}\n`;
+  txt += `\n📸 Foto registrada: ${(m.fotos&&m.fotos.length>0)?'☑ Sim':'☐ Não'}\n\n`;
+  txt += m.status==='nao_localizado' ? `❌ Veículo não localizado · BravoSeg` : `✅ Veículo recolhido · BravoSeg`;
+  if(m.status==='devolvido'){
+    txt += `\n\n📦 *DEVOLUÇÃO REGISTRADA*\n`;
+    txt += `📍 Local: ${m.devLocal||'—'}\n`;
+    if(m.devRecebedor) txt += `👤 Recebido por: ${m.devRecebedor}\n`;
+    txt += `🕐 Horário: ${m.dataDevolucao||''} ${m.horaDevolucao||''}`;
+  }
+  return txt;
+}
+
+function mostrarRelatorio(m) {
+  document.getElementById('relatorioTitulo').textContent = m.status==='nao_localizado'?'Ocorrência — Não Localizado':'Relatório de Recolhimento';
+  document.getElementById('relatorioTexto').textContent = gerarTextoRelatorio(m);
+  document.getElementById('modalRelatorio').classList.add('open');
+}
+
+function verRelatorio(id) {
+  const r = (motosCache[clienteAtual]||[]).find(m=>m.id===id);
+  if(r) mostrarRelatorio(rowParaMoto(r));
+}
+
+function copiarRelatorio() {
+  const txt = document.getElementById('relatorioTexto').textContent;
+  if(navigator.clipboard){ navigator.clipboard.writeText(txt).then(()=>showToast('✅ Copiado!')); }
+  else {
+    const ta = document.createElement('textarea');
+    ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    showToast('✅ Copiado!');
+  }
+}
+
+// ========== FINANCEIRO ==========
+function calcFinanceiro() {
+  const tipo = document.getElementById('tipoPeriodo').value;
+  const mesInput = document.getElementById('mesSelecionado');
+  mesInput.style.display = tipo==='personalizado'?'block':'none';
+
+  const agora = new Date();
+  let inicio, fim;
+  if(tipo==='hoje'){
+    inicio=new Date(agora.getFullYear(),agora.getMonth(),agora.getDate()); fim=new Date(inicio); fim.setDate(fim.getDate()+1);
+  } else if(tipo==='semana'){
+    const dow=agora.getDay()||7; inicio=new Date(agora); inicio.setDate(agora.getDate()-dow+1); inicio.setHours(0,0,0,0); fim=new Date(inicio); fim.setDate(fim.getDate()+7);
+  } else if(tipo==='mes'){
+    inicio=new Date(agora.getFullYear(),agora.getMonth(),1); fim=new Date(agora.getFullYear(),agora.getMonth()+1,1);
+  } else {
+    const v=mesInput.value; if(!v){return;}
+    const [y,m]=v.split('-').map(Number); inicio=new Date(y,m-1,1); fim=new Date(y,m,1);
+  }
+
+  document.getElementById('periodoDisplay').textContent = inicio.toLocaleDateString('pt-BR')+' — '+new Date(fim-1).toLocaleDateString('pt-BR');
+
+  const rows = (motosCache[clienteAtual]||[]).filter(r=>{
+    if(!r.data_recolhimento) return false;
+    if(r.status!=='recolhido' && r.status!=='devolvido') return false;
+    const [d,m,y] = r.data_recolhimento.split('/').map(Number);
+    const dt = new Date(y,m-1,d);
+    return dt>=inicio && dt<fim;
+  });
+
+  const vals = VALORES[clienteAtual];
+  let total=0;
+  const inad=rows.filter(r=>r.tipo!=='furto');
+  const furto=rows.filter(r=>r.tipo==='furto');
+  if(vals.inadimplencia) total+=inad.length*vals.inadimplencia;
+  if(vals.furto) total+=furto.length*vals.furto;
+
+  document.getElementById('finTotal').textContent = rows.length;
+  document.getElementById('finTotalDetalhe').textContent = clienteAtual;
+  document.getElementById('finValor').textContent = total>0?'R$'+total.toLocaleString('pt-BR'):'—';
+
+  let det='';
+  if(vals.inadimplencia&&inad.length) det+=`${inad.length}× inadimp. × R$${vals.inadimplencia}`;
+  if(vals.furto&&furto.length){ if(det) det+=' · '; det+=`${furto.length}× furto × R$${vals.furto}`; }
+  if(!vals.inadimplencia&&!vals.furto) det='Valores a definir';
+  document.getElementById('finValorDetalhe').textContent = det;
+
+  let html='';
+  if(inad.length){
+    html+=`<div class="fin-card" style="margin-bottom:8px;border-color:var(--laranja)"><div class="fin-card-title">Inadimplência (${inad.length})</div>${inad.map(r=>`<div class="consol-item"><span class="consol-placa">${r.placa}</span><span class="consol-detail">${r.data_recolhimento||'—'}</span></div>`).join('')}</div>`;
+  }
+  if(furto.length){
+    html+=`<div class="fin-card" style="margin-bottom:8px;border-color:var(--vermelho)"><div class="fin-card-title">Furto/Roubo (${furto.length})</div>${furto.map(r=>`<div class="consol-item"><span class="consol-placa">${r.placa}</span><span class="consol-detail">${r.data_recolhimento||'—'}</span></div>`).join('')}</div>`;
+  }
+  document.getElementById('finBreakdown').innerHTML = html;
+  document.getElementById('btnConsolidado').style.display = clienteAtual==='MAVE'?'block':'none';
+}
+
+async function gerarRelatorioFinanceiro() {
+  const periodo = document.getElementById('periodoDisplay').textContent;
+  const tipo = document.getElementById('tipoPeriodo').value;
+  const agora = new Date();
+  let inicio, fim;
+  if(tipo==='hoje'){ inicio=new Date(agora.getFullYear(),agora.getMonth(),agora.getDate()); fim=new Date(inicio); fim.setDate(fim.getDate()+1); }
+  else if(tipo==='semana'){ const dow=agora.getDay()||7; inicio=new Date(agora); inicio.setDate(agora.getDate()-dow+1); inicio.setHours(0,0,0,0); fim=new Date(inicio); fim.setDate(fim.getDate()+7); }
+  else if(tipo==='mes'){ inicio=new Date(agora.getFullYear(),agora.getMonth(),1); fim=new Date(agora.getFullYear(),agora.getMonth()+1,1); }
+  else { const v=document.getElementById('mesSelecionado').value; if(!v){showToast('Selecione um período');return;} const [y,m]=v.split('-').map(Number); inicio=new Date(y,m-1,1); fim=new Date(y,m,1); }
+
+  const rows=(motosCache[clienteAtual]||[]).filter(r=>{ if(!r.data_recolhimento)return false; if(r.status!=='recolhido'&&r.status!=='devolvido')return false; const [d,m,y]=r.data_recolhimento.split('/').map(Number); return new Date(y,m-1,d)>=inicio&&new Date(y,m-1,d)<fim; });
+  const vals=VALORES[clienteAtual];
+  const inad=rows.filter(r=>r.tipo!=='furto'); const furto=rows.filter(r=>r.tipo==='furto');
+  let total=0;
+  if(vals.inadimplencia) total+=inad.length*vals.inadimplencia;
+  if(vals.furto) total+=furto.length*vals.furto;
+  const nomes={MAVE:'Mave Locadora',MOVVI:'Movvi Locadora',LOCAGORA:'Locagora',MOTTU:'Mottu'};
+
+  let txt=`📊 *RELATÓRIO FINANCEIRO · BravoSeg*\n\n*Cliente:* ${nomes[clienteAtual]}\n📅 *Período:* ${periodo}\n━━━━━━━━━━━━━━━━\n\n`;
+  if(inad.length){ txt+=`🔸 *Inadimplência/Recolhimento*\nQuantidade: ${inad.length} moto(s)\n`; if(vals.inadimplencia) txt+=`Valor unitário: R$${vals.inadimplencia}\nSubtotal: R$${(inad.length*vals.inadimplencia).toLocaleString('pt-BR')}\n`; inad.forEach(r=>{txt+=`  · ${r.placa} — ${r.data_recolhimento||'—'}\n`;}); txt+='\n'; }
+  if(furto.length){ txt+=`🔴 *Furto/Roubo*\nQuantidade: ${furto.length} moto(s)\n`; if(vals.furto) txt+=`Valor unitário: R$${vals.furto}\nSubtotal: R$${(furto.length*vals.furto).toLocaleString('pt-BR')}\n`; furto.forEach(r=>{txt+=`  · ${r.placa} — ${r.data_recolhimento||'—'}\n`;}); txt+='\n'; }
+  txt+=`━━━━━━━━━━━━━━━━\n✅ *Total: ${rows.length} recolhimento(s)*\n`; if(total>0) txt+=`💰 *Valor Total: R$${total.toLocaleString('pt-BR')}*\n`;
+  txt+=`\n_BravoSeg — Apoio Operacional_ 🛡️`;
+
+  document.getElementById('relatorioTitulo').textContent='Relatório Financeiro';
+  document.getElementById('relatorioTexto').textContent=txt;
+  document.getElementById('modalRelatorio').classList.add('open');
+}
+
+function gerarConsolidadoDia() {
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  const rows = (motosCache['MAVE']||[]).filter(r=>(r.status==='recolhido'||r.status==='devolvido')&&(r.data_recolhimento===hoje||r.data_devolucao===hoje));
+  if(!rows.length){ showToast('Nenhum recolhimento hoje'); return; }
+
+  const dev=rows.filter(r=>r.status==='devolvido'); const rec=rows.filter(r=>r.status==='recolhido');
+  let txt=`📦 *RELATÓRIO DE DEVOLUÇÃO · BravoSeg*\n*Cliente:* Mave Locadora\n📅 *Data:* ${hoje}\n━━━━━━━━━━━━━━━━\n\n`;
+  if(dev.length){ txt+=`✅ *DEVOLVIDAS NA BASE (${dev.length})*\n\n`; dev.forEach(r=>{ txt+=`🪧 *Placa:* ${r.placa}\n`; if(r.modelo||r.cor) txt+=`🏍️ *Modelo/Cor:* ${[r.modelo,r.cor].filter(Boolean).join(' ')}\n`; txt+=`🕐 *Entrega:* ${r.data_devolucao||r.data_recolhimento} ${r.hora_devolucao||r.hora_recolhimento||''}\n`; if(r.dev_recebedor) txt+=`👤 *Recebido por:* ${r.dev_recebedor}\n`; if(r.dev_local) txt+=`📍 *Local:* ${r.dev_local}\n`; txt+='\n'; }); }
+  if(rec.length){ txt+=`🔄 *AGUARDANDO DEVOLUÇÃO (${rec.length})*\n\n`; rec.forEach(r=>{ txt+=`🪧 *Placa:* ${r.placa}\n`; if(r.modelo||r.cor) txt+=`🏍️ *Modelo/Cor:* ${[r.modelo,r.cor].filter(Boolean).join(' ')}\n`; txt+=`🕐 *Recolhimento:* ${r.data_recolhimento} ${r.hora_recolhimento||''}\n`; if(r.local_abordagem) txt+=`📍 *Local:* ${r.local_abordagem}\n`; txt+='\n'; }); }
+  txt+=`━━━━━━━━━━━━━━━━\n📊 *Total: ${rows.length}* · ✅ Dev: ${dev.length} · 🔄 Aguard: ${rec.length}\n\n_BravoSeg — Apoio Operacional_ 🛡️`;
+
+  document.getElementById('relatorioTitulo').textContent='Consolidado Diário — Mave';
+  document.getElementById('relatorioTexto').textContent=txt;
+  document.getElementById('modalRelatorio').classList.add('open');
+}
+
+// ========== UNDO ==========
+function showUndoBar(msg) {
+  document.getElementById('undoMsg').textContent=msg;
+  document.getElementById('undoBar').classList.add('show');
+  if(undoTimer) clearTimeout(undoTimer);
+  undoTimer = setTimeout(()=>{ document.getElementById('undoBar').classList.remove('show'); ultimaAcao=null; }, 8000);
+}
+
+async function undoAcao() {
+  if(!ultimaAcao) return;
+  document.getElementById('undoBar').classList.remove('show');
+  ultimaAcao.motoAnterior.cliente = ultimaAcao.motoAnterior.cliente || clienteAtual;
+  await salvarMoto(ultimaAcao.motoAnterior);
+  ultimaAcao=null;
+  await carregarMotos(clienteAtual);
+  renderLista();
+  showToast('↩ Desfeito');
+}
+
+// ========== CONFIRMA ==========
+function confirmarExclusao(id) {
+  mostrarConfirm('Excluir moto?','Esta moto será removida da lista.',async()=>{
+    await removerMoto(id, clienteAtual);
+    renderLista();
+    showToast('🗑️ Removida');
+  });
+}
+
+function confirmarUndo(id) {
+  mostrarConfirm('Reverter status?','O status voltará para Pendente.',async()=>{
+    const r=(motosCache[clienteAtual]||[]).find(m=>m.id===id);
+    if(r){
+      const m=rowParaMoto(r);
+      m.status='pendente'; m.situacao=null; m.quem=null; m.local=null;
+      m.dataRecolhimento=null; m.horaRecolhimento=null;
+      m.dataDevolucao=null; m.horaDevolucao=null;
+      m.devRecebedor=null; m.devLocal=null; m.fotos=[];
+      await salvarMoto(m);
+      renderLista();
+      showToast('↩ Revertido para Pendente');
+    }
+  });
+}
+
+function mostrarConfirm(titulo, msg, cb) {
+  document.getElementById('confirmTitle').textContent=titulo;
+  document.getElementById('confirmMsg').textContent=msg;
+  confirmCallback=cb;
+  document.getElementById('confirmOverlay').classList.add('open');
+}
+function confirmAccept(){ document.getElementById('confirmOverlay').classList.remove('open'); if(confirmCallback) confirmCallback(); confirmCallback=null; }
+function confirmReject(){ document.getElementById('confirmOverlay').classList.remove('open'); confirmCallback=null; }
+
+// ========== TOAST ==========
+function showToast(msg, dur=2500) {
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ========== INIT ==========
+async function iniciarApp() {
+  document.getElementById('mesSelecionado').value = new Date().toISOString().slice(0,7);
+  document.querySelectorAll('.modal-overlay').forEach(m=>{ m.addEventListener('click',function(e){ if(e.target===this) this.classList.remove('open'); }); });
+  ativarRealtime('MAVE');
+  await carregarMotos('MAVE');
+  renderLista();
+}
+
+document.addEventListener('DOMContentLoaded', ()=>{
+  // Aguarda login — iniciarApp() é chamado após entrar()
+});
+
+// ========== SERVICE WORKER (PWA install) ==========
+if('serviceWorker' in navigator) {
+  const swCode = `
+    self.addEventListener('install', e => self.skipWaiting());
+    self.addEventListener('activate', e => clients.claim());
+    self.addEventListener('fetch', e => e.respondWith(fetch(e.request).catch(() => caches.match(e.request))));
+  `;
+  const blob = new Blob([swCode], {type:'application/javascript'});
+  const swUrl = URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl, {scope:'/'}).catch(()=>{});
+}
+</script>
+</body>
+</html>
