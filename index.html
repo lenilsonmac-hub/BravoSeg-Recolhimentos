@@ -9,7 +9,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <title>BravoSeg — Recolhimentos</title>
 <link rel="manifest" href="./manifest.json">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 :root{--preto:#0D0D0D;--vermelho:#A51C1C;--branco:#FFFFFF;--cinza:#1a1a1a;--cinza2:#2a2a2a;--cinza3:#3a3a3a;--texto-sec:#999;--verde:#2d7a3a;--laranja:#c47a1a;--azul:#1a4a8a;}
@@ -478,7 +478,7 @@ function entrarAgente() { entrar('agente'); }
 
 function entrar(perfil) {
   perfilAtual = perfil;
-  sessionStorage.setItem('bravoseg_perfil', perfil);
+  localStorage.setItem('bravoseg_perfil', perfil);
   document.getElementById('loginOverlay').style.display = 'none';
   document.getElementById('perfilLabel').textContent = perfil === 'gestor' ? 'Gestor' : 'Agente';
   const navFin = document.getElementById('navFinanceiro');
@@ -495,7 +495,7 @@ function entrar(perfil) {
 
 function sair() {
   perfilAtual = null;
-  sessionStorage.removeItem('bravoseg_perfil');
+  localStorage.removeItem('bravoseg_perfil');
   document.getElementById('loginSenhaWrap').classList.remove('show');
   document.getElementById('loginSenhaInput').value = '';
   document.getElementById('loginErro').style.display = 'none';
@@ -829,6 +829,8 @@ function abrirRecolhimento(id) {
   document.querySelectorAll('input[name="quem"]').forEach(r=>r.checked=false);
   document.getElementById('modalLocal').value = '';
   document.getElementById('modalObs').value = motoAtual.obs||'';
+  // Libera objectURLs de sessão anterior antes de resetar
+  fotosCapturadas.forEach(f=>{ try{URL.revokeObjectURL(f.url);}catch(e){} });
   fotosCapturadas = [];
   document.getElementById('fotoPreview').innerHTML = '';
   document.getElementById('modalRecolhimento').classList.add('open');
@@ -836,6 +838,10 @@ function abrirRecolhimento(id) {
 
 function fecharModal() {
   document.getElementById('modalRecolhimento').classList.remove('open');
+  // Libera objectURLs das fotos ao fechar o modal
+  fotosCapturadas.forEach(f=>{ try{URL.revokeObjectURL(f.url);}catch(e){} });
+  fotosCapturadas = [];
+  document.getElementById('fotoPreview').innerHTML = '';
   motoAtual = null;
 }
 
@@ -843,9 +849,9 @@ function processarFotos(event) {
   Array.from(event.target.files).forEach(file=>{
     const agora = new Date();
     const ts = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    // Usa URL de objeto — sem carregar imagem inteira na memória
+    // Guarda o File original e cria URL leve — sem canvas, sem base64
     const url = URL.createObjectURL(file);
-    fotosCapturadas.push({url, timestamp: ts});
+    fotosCapturadas.push({url, file, timestamp: ts});
     renderFotoPreview();
   });
   event.target.value='';
@@ -870,12 +876,13 @@ async function compartilharFoto(i) {
   const f = fotosCapturadas[i];
   if(!f) return;
   try {
-    const resp = await fetch(f.url);
-    const blob = await resp.blob();
     const nome = `BravoSeg_${f.timestamp.replace(/[/:]/g,'-').replace(/ /g,'_')}.jpg`;
-    const file = new File([blob], nome, {type: blob.type || 'image/jpeg'});
-    if(navigator.share && navigator.canShare({files:[file]})) {
-      await navigator.share({files:[file], title:'BravoSeg Recolhimento', text:'📸 ' + f.timestamp});
+    // Usa o File original — evita criar cópia extra em RAM via fetch
+    const fileParaCompartilhar = f.file
+      ? new File([f.file], nome, {type: f.file.type || 'image/jpeg'})
+      : null;
+    if(fileParaCompartilhar && navigator.share && navigator.canShare({files:[fileParaCompartilhar]})) {
+      await navigator.share({files:[fileParaCompartilhar], title:'BravoSeg Recolhimento', text:'📸 ' + f.timestamp});
     } else {
       const a = document.createElement('a');
       a.href = f.url; a.download = nome; a.click();
@@ -945,9 +952,8 @@ async function confirmarRecolhimento() {
   if(ok) {
     showUndoBar('Recolhimento registrado');
     setTimeout(()=>mostrarRelatorio(motoAtual), 400);
-  } else {
-    showToast('❌ Erro ao salvar. Tente novamente.');
   }
+  // Erro já mostrado dentro de salvarMoto com msg real do Supabase
 }
 
 // ========== DEVOLUÇÃO ==========
@@ -1211,11 +1217,29 @@ async function iniciarApp() {
 
 document.addEventListener('DOMContentLoaded', ()=>{
   // Verifica se já existe sessão salva (evita ter que logar de novo após refresh)
-  const perfilSalvo = sessionStorage.getItem('bravoseg_perfil');
+  const perfilSalvo = localStorage.getItem('bravoseg_perfil');
   if(perfilSalvo === 'agente' || perfilSalvo === 'gestor') {
     entrar(perfilSalvo);
   }
   // Caso contrário aguarda clique no login
+});
+
+// ========== GERENCIAMENTO DE MEMÓRIA ==========
+// Pausa realtime quando app vai pra segundo plano, economiza RAM
+document.addEventListener('visibilitychange', () => {
+  if(document.hidden) {
+    // Desconecta WebSocket ao ir para segundo plano
+    if(realtimeSub) {
+      try { sb.removeChannel(realtimeSub); } catch(e){}
+      realtimeSub = null;
+    }
+  } else if(perfilAtual) {
+    // Ao voltar, reconecta apenas se ainda não há canal ativo
+    if(!realtimeSub) {
+      ativarRealtime(clienteAtual);
+    }
+    carregarERendar();
+  }
 });
 
 // ========== SERVICE WORKER (PWA install) ==========
