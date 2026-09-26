@@ -97,6 +97,13 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 .check-item input[type=checkbox]{width:18px;height:18px;accent-color:var(--vermelho);cursor:pointer;flex-shrink:0;}
 .check-item input[type=radio]{width:18px;height:18px;accent-color:var(--vermelho);cursor:pointer;flex-shrink:0;}
 .check-item label{font-size:14px;cursor:pointer;flex:1;}
+.toggle-group{display:flex;flex-direction:column;gap:10px;}
+.toggle-row{display:flex;align-items:center;gap:10px;background:var(--cinza2);padding:10px 12px;border-radius:10px;}
+.toggle-label{font-size:13px;font-weight:600;min-width:72px;}
+.toggle-opts{display:flex;gap:6px;flex:1;}
+.toggle-btn{flex:1;padding:7px 4px;border-radius:8px;border:2px solid #444;background:transparent;color:var(--texto-sec);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s;}
+.toggle-sim.active{background:#0d2b0d;border-color:#44cc44;color:#44cc44;}
+.toggle-nao.active{background:#2b0d0d;border-color:#ff4444;color:#ff4444;}
 .obs-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:10px 12px;border-radius:10px;font-size:14px;min-height:80px;resize:none;outline:none;font-family:inherit;}
 .obs-input:focus{border-color:var(--vermelho);}
 .foto-area{border:2px dashed #444;border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:8px;}
@@ -297,12 +304,28 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
     <div class="modal-sub" id="modalSub">—</div>
 
     <div class="section-title">Status do Veículo</div>
-    <div class="check-group">
-      <div class="check-item"><input type="checkbox" id="chkComPlaca"><label for="chkComPlaca">Com placa</label></div>
-      <div class="check-item"><input type="checkbox" id="chkSemPlaca"><label for="chkSemPlaca">Sem placa</label></div>
-      <div class="check-item"><input type="checkbox" id="chkComChave"><label for="chkComChave">Com chave</label></div>
-      <div class="check-item"><input type="checkbox" id="chkSemChave"><label for="chkSemChave">Sem chave</label></div>
-      <div class="check-item"><input type="checkbox" id="chkAvarias"><label for="chkAvarias">Avarias visíveis</label></div>
+    <div class="toggle-group">
+      <div class="toggle-row">
+        <span class="toggle-label">🔖 Placa</span>
+        <div class="toggle-opts">
+          <button class="toggle-btn toggle-sim active" id="tglPlacaSim" onclick="setToggle('placa','sim')">✅ Com placa</button>
+          <button class="toggle-btn toggle-nao" id="tglPlacaNao" onclick="setToggle('placa','nao')">❌ Sem placa</button>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">🔑 Chave</span>
+        <div class="toggle-opts">
+          <button class="toggle-btn toggle-sim active" id="tglChaveSim" onclick="setToggle('chave','sim')">✅ Com chave</button>
+          <button class="toggle-btn toggle-nao" id="tglChaveNao" onclick="setToggle('chave','nao')">❌ Sem chave</button>
+        </div>
+      </div>
+      <div class="toggle-row">
+        <span class="toggle-label">⚠️ Avarias</span>
+        <div class="toggle-opts">
+          <button class="toggle-btn toggle-nao active" id="tglAvariasSim" onclick="setToggle('avarias','sim')">Sim</button>
+          <button class="toggle-btn toggle-sim" id="tglAvariasnao" onclick="setToggle('avarias','nao')">Não</button>
+        </div>
+      </div>
     </div>
 
     <div class="section-title">Situação na Abordagem</div>
@@ -794,7 +817,8 @@ function abrirRecolhimento(id) {
   document.getElementById('modalPlaca').textContent = motoAtual.placa;
   document.getElementById('modalSub').textContent = [motoAtual.modelo,motoAtual.cor].filter(Boolean).join(' — ')||'—';
 
-  ['chkComPlaca','chkSemPlaca','chkComChave','chkSemChave','chkAvarias'].forEach(id=>document.getElementById(id).checked=false);
+  // Reset toggles de status do veículo
+  setToggle('placa','sim'); setToggle('chave','sim'); setToggle('avarias','nao');
   document.querySelectorAll('input[name="situacao"]').forEach(r=>r.checked=false);
   document.querySelectorAll('input[name="quem"]').forEach(r=>r.checked=false);
   document.getElementById('modalLocal').value = '';
@@ -835,6 +859,22 @@ function renderFotoPreview() {
 
 function removerFoto(i){ fotosCapturadas.splice(i,1); renderFotoPreview(); }
 
+// ========== TOGGLES STATUS VEÍCULO ==========
+let toggleState = {placa:'sim', chave:'sim', avarias:'nao'};
+function setToggle(campo, valor) {
+  toggleState[campo] = valor;
+  if(campo==='placa'){
+    document.getElementById('tglPlacaSim').className='toggle-btn toggle-sim'+(valor==='sim'?' active':'');
+    document.getElementById('tglPlacaNao').className='toggle-btn toggle-nao'+(valor==='nao'?' active':'');
+  } else if(campo==='chave'){
+    document.getElementById('tglChaveSim').className='toggle-btn toggle-sim'+(valor==='sim'?' active':'');
+    document.getElementById('tglChaveNao').className='toggle-btn toggle-nao'+(valor==='nao'?' active':'');
+  } else if(campo==='avarias'){
+    document.getElementById('tglAvariasSim').className='toggle-btn toggle-nao'+(valor==='sim'?' active':'');
+    document.getElementById('tglAvariasnao').className='toggle-btn toggle-sim'+(valor==='nao'?' active':'');
+  }
+}
+
 async function confirmarRecolhimento() {
   if(!motoAtual) return;
   const situacao = document.querySelector('input[name="situacao"]:checked');
@@ -854,11 +894,11 @@ async function confirmarRecolhimento() {
   motoAtual.dataRecolhimento = agora.toLocaleDateString('pt-BR');
   motoAtual.horaRecolhimento = agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   motoAtual.statusVeiculo = {
-    comPlaca: document.getElementById('chkComPlaca').checked,
-    semPlaca: document.getElementById('chkSemPlaca').checked,
-    comChave: document.getElementById('chkComChave').checked,
-    semChave: document.getElementById('chkSemChave').checked,
-    avarias: document.getElementById('chkAvarias').checked,
+    comPlaca: toggleState.placa === 'sim',
+    semPlaca: toggleState.placa === 'nao',
+    comChave: toggleState.chave === 'sim',
+    semChave: toggleState.chave === 'nao',
+    avarias: toggleState.avarias === 'sim',
   };
   motoAtual.fotos = fotosCapturadas.map(f=>f.timestamp);
 
