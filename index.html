@@ -660,17 +660,30 @@ function ativarRealtime(cliente) {
     .on('postgres_changes', {event:'*', schema:'public', table:'motos', filter:`cliente=eq.${cliente}`}, payload => {
       // Atualiza cache e re-renderiza
       if(!motosCache[cliente]) motosCache[cliente] = [];
-      if(payload.eventType === 'DELETE') {
-        motosCache[cliente] = motosCache[cliente].filter(m=>m.id!==payload.old.id);
-      } else if(payload.eventType === 'INSERT') {
-        const existe = motosCache[cliente].find(m=>m.id===payload.new.id);
-        if(!existe) motosCache[cliente].unshift(payload.new);
-      } else if(payload.eventType === 'UPDATE') {
-        const idx = motosCache[cliente].findIndex(m=>m.id===payload.new.id);
-        if(idx>=0) motosCache[cliente][idx] = payload.new; else motosCache[cliente].unshift(payload.new);
+      try {
+        if(payload.eventType === 'DELETE') {
+          const oldId = payload.old && payload.old.id;
+          if(oldId) motosCache[cliente] = motosCache[cliente].filter(m=>m.id!==oldId);
+          else { await carregarMotos(cliente); } // fallback: recarrega tudo
+        } else if(payload.eventType === 'INSERT') {
+          const novo = payload.new;
+          if(novo && novo.id) {
+            const existe = motosCache[cliente].find(m=>m.id===novo.id);
+            if(!existe) motosCache[cliente].unshift(novo);
+          }
+        } else if(payload.eventType === 'UPDATE') {
+          const atualizado = payload.new;
+          if(atualizado && atualizado.id) {
+            const idx = motosCache[cliente].findIndex(m=>m.id===atualizado.id);
+            if(idx>=0) motosCache[cliente][idx] = atualizado; else motosCache[cliente].unshift(atualizado);
+          }
+        }
+      } catch(err) {
+        console.warn('Realtime payload error:', err);
+        carregarMotos(cliente); // fallback seguro
       }
       if(paginaAtual==='Lista') renderLista();
-      if(paginaAtual==='Financeiro') calcFinanceiro();
+      if(paginaAtual==='Financeiro' && perfilAtual==='gestor') calcFinanceiro();
     })
     .subscribe();
 }
@@ -685,8 +698,8 @@ function setPage(p) {
   const navEl = document.getElementById('nav'+p);
   if(navEl) navEl.classList.add('active');
   if(p==='Lista') carregarERendar();
-  if(p==='Financeiro') calcFinanceiro();
-  if(p==='Cadastro') document.getElementById('cadCliente').value = clienteAtual;
+  if(p==='Financeiro' && perfilAtual==='gestor') calcFinanceiro();
+  if(p==='Cadastro' && perfilAtual==='gestor') { const el=document.getElementById('cadCliente'); if(el) el.value=clienteAtual; }
 }
 
 function setCliente(c, el) {
@@ -867,7 +880,8 @@ function renderFotoPreview() {
 }
 
 function removerFoto(i){
-  URL.revokeObjectURL(fotosCapturadas[i]?.url);
+  if(i < 0 || i >= fotosCapturadas.length) return;
+  try{ URL.revokeObjectURL(fotosCapturadas[i].url); }catch(e){}
   fotosCapturadas.splice(i,1);
   renderFotoPreview();
 }
@@ -946,12 +960,14 @@ async function confirmarRecolhimento() {
     await salvarReincidencia(chave, novoCount, motoAtual.dataRecolhimento);
   }
 
+  // Salva cópia antes de fecharModal() zerar motoAtual
+  const motoParaRelatorio = JSON.parse(JSON.stringify(motoAtual));
   fecharModal();
-  const ok = await salvarMoto(motoAtual);
+  const ok = await salvarMoto(motoParaRelatorio);
   renderLista();
   if(ok) {
     showUndoBar('Recolhimento registrado');
-    setTimeout(()=>mostrarRelatorio(motoAtual), 400);
+    setTimeout(()=>mostrarRelatorio(motoParaRelatorio), 400);
   }
   // Erro já mostrado dentro de salvarMoto com msg real do Supabase
 }
@@ -1047,8 +1063,11 @@ function copiarRelatorio() {
 
 // ========== FINANCEIRO ==========
 function calcFinanceiro() {
-  const tipo = document.getElementById('tipoPeriodo').value;
+  // Só roda se os elementos existirem (gestor pode ter a página oculta)
+  const tipoPeriodoEl = document.getElementById('tipoPeriodo');
   const mesInput = document.getElementById('mesSelecionado');
+  if(!tipoPeriodoEl || !mesInput) return;
+  const tipo = tipoPeriodoEl.value;
   mesInput.style.display = tipo==='personalizado'?'block':'none';
 
   const agora = new Date();
@@ -1103,8 +1122,11 @@ function calcFinanceiro() {
 }
 
 async function gerarRelatorioFinanceiro() {
-  const periodo = document.getElementById('periodoDisplay').textContent;
-  const tipo = document.getElementById('tipoPeriodo').value;
+  const periodoEl = document.getElementById('periodoDisplay');
+  const tipoPeriodoEl = document.getElementById('tipoPeriodo');
+  if(!periodoEl || !tipoPeriodoEl) return;
+  const periodo = periodoEl.textContent;
+  const tipo = tipoPeriodoEl.value;
   const agora = new Date();
   let inicio, fim;
   if(tipo==='hoje'){ inicio=new Date(agora.getFullYear(),agora.getMonth(),agora.getDate()); fim=new Date(inicio); fim.setDate(fim.getDate()+1); }
@@ -1246,6 +1268,14 @@ document.addEventListener('visibilitychange', () => {
 if('serviceWorker' in navigator) {
   navigator.serviceWorker.register('./sw.js', {scope: '/BravoSeg-Recolhimentos/'}).catch(e => console.warn('SW:', e));
 }
+
+// ========== CAPTURA GLOBAL DE ERROS JS ==========
+window.onerror = function(msg, src, line, col, err) {
+  const detalhe = (msg||'').slice(0,60) + (line?' L'+line:'');
+  showToast('⚠️ JS: ' + detalhe, 4000);
+  console.error('GlobalError:', msg, src, line, col, err);
+  return true; // Não deixa o erro subir e travar o app
+};
 </script>
 </body>
 </html>
