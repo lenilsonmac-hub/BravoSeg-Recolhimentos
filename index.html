@@ -111,6 +111,7 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 .foto-thumb{width:72px;height:72px;border-radius:8px;object-fit:cover;border:2px solid #444;}
 .foto-thumb-wrap{position:relative;}
 .foto-remove{position:absolute;top:-6px;right:-6px;background:var(--vermelho);color:white;border:none;border-radius:50%;width:20px;height:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.foto-ts{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#ffcc00;font-size:8px;font-weight:700;text-align:center;padding:2px 2px;border-radius:0 0 8px 8px;line-height:1.2;}
 .divider{height:1px;background:#333;margin:14px 0;}
 .local-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:10px 12px;border-radius:10px;font-size:14px;outline:none;}
 .local-input:focus{border-color:var(--vermelho);}
@@ -554,7 +555,6 @@ async function salvarMoto(moto) {
     const row = motoParaRow(moto);
     const { error } = await sb.from('motos').upsert(row, {onConflict: 'id'});
     if(error) throw error;
-    // Atualiza cache local
     if(!motosCache[moto.cliente]) motosCache[moto.cliente] = [];
     const idx = motosCache[moto.cliente].findIndex(m=>m.id===moto.id);
     if(idx>=0) motosCache[moto.cliente][idx] = row; else motosCache[moto.cliente].unshift(row);
@@ -563,6 +563,9 @@ async function salvarMoto(moto) {
   } catch(e) {
     console.error(e);
     setSyncStatus('offline');
+    // Mostra o erro real do Supabase para diagnóstico
+    const msg = e?.message || e?.details || JSON.stringify(e);
+    showToast('❌ ' + msg.slice(0,80));
     return false;
   }
 }
@@ -838,75 +841,46 @@ function fecharModal() {
 
 function processarFotos(event) {
   Array.from(event.target.files).forEach(file=>{
-    const reader = new FileReader();
-    reader.onload = e => {
-      const agora = new Date();
-      const ts = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-      // Estampa o timestamp na imagem via canvas
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0);
-        // Fundo semitransparente para o texto
-        const fontSize = Math.max(20, Math.floor(img.width * 0.035));
-        ctx.font = `bold ${fontSize}px monospace`;
-        const linha1 = 'BravoSeg Recolhimentos';
-        const linha2 = ts;
-        const pad = fontSize * 0.5;
-        const w1 = ctx.measureText(linha1).width;
-        const w2 = ctx.measureText(linha2).width;
-        const boxW = Math.max(w1, w2) + pad * 2;
-        const boxH = fontSize * 2.8;
-        const x = img.width - boxW - pad;
-        const y = img.height - boxH - pad;
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        ctx.beginPath();
-        ctx.roundRect(x, y, boxW, boxH, 6);
-        ctx.fill();
-        ctx.fillStyle = '#ffffff';
-        ctx.fillText(linha1, x + pad, y + fontSize * 1.1);
-        ctx.fillStyle = '#ffcc00';
-        ctx.fillText(linha2, x + pad, y + fontSize * 2.3);
-        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
-        fotosCapturadas.push({data: dataUrl, timestamp: ts});
-        renderFotoPreview();
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
+    const agora = new Date();
+    const ts = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    // Usa URL de objeto — sem carregar imagem inteira na memória
+    const url = URL.createObjectURL(file);
+    fotosCapturadas.push({url, timestamp: ts});
+    renderFotoPreview();
   });
   event.target.value='';
 }
 
 function renderFotoPreview() {
   document.getElementById('fotoPreview').innerHTML = fotosCapturadas.map((f,i)=>`
-    <div class="foto-thumb-wrap">
-      <img class="foto-thumb" src="${f.data}" title="${f.timestamp}" onclick="compartilharFoto(${i})">
-      <button class="foto-remove" onclick="removerFoto(${i})">×</button>
+    <div class="foto-thumb-wrap" onclick="compartilharFoto(${i})" style="cursor:pointer;">
+      <img class="foto-thumb" src="${f.url}">
+      <div class="foto-ts">${f.timestamp}</div>
+      <button class="foto-remove" onclick="event.stopPropagation();removerFoto(${i})">×</button>
     </div>`).join('');
 }
 
-function removerFoto(i){ fotosCapturadas.splice(i,1); renderFotoPreview(); }
+function removerFoto(i){
+  URL.revokeObjectURL(fotosCapturadas[i]?.url);
+  fotosCapturadas.splice(i,1);
+  renderFotoPreview();
+}
 
 async function compartilharFoto(i) {
   const f = fotosCapturadas[i];
   if(!f) return;
   try {
-    const blob = await (await fetch(f.data)).blob();
-    const file = new File([blob], `bravoseg_${f.timestamp.replace(/[/:]/g,'-')}.jpg`, {type:'image/jpeg'});
+    const resp = await fetch(f.url);
+    const blob = await resp.blob();
+    const nome = `BravoSeg_${f.timestamp.replace(/[/:]/g,'-').replace(/ /g,'_')}.jpg`;
+    const file = new File([blob], nome, {type: blob.type || 'image/jpeg'});
     if(navigator.share && navigator.canShare({files:[file]})) {
-      await navigator.share({files:[file], title:'BravoSeg Recolhimento', text:f.timestamp});
+      await navigator.share({files:[file], title:'BravoSeg Recolhimento', text:'📸 ' + f.timestamp});
     } else {
-      // Fallback: download direto
       const a = document.createElement('a');
-      a.href = f.data;
-      a.download = file.name;
-      a.click();
+      a.href = f.url; a.download = nome; a.click();
     }
-  } catch(e) { if(e.name !== 'AbortError') showToast('Toque na foto para compartilhar'); }
+  } catch(e) { if(e.name !== 'AbortError') showToast('Erro ao compartilhar'); }
 }
 
 // ========== TOGGLES STATUS VEÍCULO ==========
