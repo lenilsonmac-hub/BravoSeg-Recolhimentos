@@ -11,7 +11,7 @@
 <link rel="manifest" href="./manifest.json">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-:root{--preto:#0D0D0D;--vermelho:#A51C1C;--branco:#FFFFFF;--cinza:#1a1a1a;--cinza2:#2a2a2a;--cinza3:#3a3a3a;--texto-sec:#999;--verde:#2d7a3a;--laranja:#c47a1a;--azul:#1a4a8a;}
+:root{--preto:#0D0D0D;--vermelho:#A51C1C;--branco:#FFFFFF;--cinza:#1a1a1a;--cinza2:#2a2a2a;--cinza3:#3a3a3a;--texto-sec:#999;--verde:#2d7a3a;--laranja:#c47a1a;--azul:#1a4a8a;--roxo:#5a1a8a;--amarelo:#aa8800;}
 body{background:var(--preto);color:var(--branco);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;overflow-x:hidden;}
 
 .header{background:var(--preto);border-bottom:2px solid var(--vermelho);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
@@ -38,13 +38,21 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 .page.active{display:block;}
 
 .card{background:var(--cinza);border-radius:12px;padding:14px;margin-bottom:10px;border:1px solid #333;}
+.card.card-prioridade{border-color:#aa6600;background:#1a1400;}
+.card.card-interior{border-color:#3a1a6a;background:#120d1a;}
+.card.card-indisponivel{border-color:#4a1a1a;background:#150808;}
+.card.card-resolvido{border-color:#1a3a1a;background:#0a150a;}
 .card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;}
 .placa{font-size:18px;font-weight:800;letter-spacing:1px;}
 .status-badge{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;letter-spacing:0.5px;}
 .status-pendente{background:#332200;color:#ffaa00;}
+.status-prioridade{background:#3a2200;color:#ffcc00;}
 .status-recolhido{background:#0d2b0d;color:#44cc44;}
 .status-devolvido{background:#0a1f3a;color:#4499ff;}
 .status-nao-loc{background:#2b0d0d;color:#ff4444;}
+.status-indisponivel{background:#2b1a0d;color:#ff8844;}
+.status-resolvido{background:#0d1a0d;color:#88cc88;}
+.status-interior{background:#1a0d2b;color:#cc88ff;}
 .card-modelo{font-size:12px;color:var(--texto-sec);margin-bottom:6px;}
 .card-info{font-size:12px;color:#777;}
 .card-actions{display:flex;gap:8px;margin-top:10px;}
@@ -53,10 +61,15 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 .btn-secondary{background:var(--cinza3);color:var(--branco);}
 .btn-green{background:var(--verde);color:var(--branco);}
 .btn-blue{background:var(--azul);color:var(--branco);}
+.btn-roxo{background:var(--roxo);color:var(--branco);}
+.btn-laranja{background:#8a4a00;color:var(--branco);}
 .reincidencia{font-size:10px;color:var(--laranja);font-weight:600;margin-top:4px;}
 .tipo-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;}
 .tipo-inadimplencia{background:#332200;color:#ffaa00;}
 .tipo-furto{background:#2b0d0d;color:#ff4444;}
+.secao-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1px;padding:8px 0 4px;color:var(--texto-sec);border-bottom:1px solid #333;margin-bottom:8px;}
+.secao-prioridade{color:#ffcc00;}
+.secao-interior{color:#cc88ff;}
 
 .empty-state{text-align:center;padding:40px 20px;color:var(--texto-sec);}
 .empty-icon{font-size:48px;margin-bottom:12px;}
@@ -77,8 +90,9 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 
 .form-group{margin-bottom:14px;}
 .form-label{font-size:12px;font-weight:700;color:var(--texto-sec);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;}
-.form-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:12px;border-radius:10px;font-size:15px;outline:none;}
+.form-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:12px;border-radius:10px;font-size:15px;outline:none;text-transform:uppercase;}
 .form-input:focus{border-color:var(--vermelho);}
+.form-input::placeholder{text-transform:none;}
 .form-select{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:12px;border-radius:10px;font-size:15px;outline:none;appearance:none;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
 
@@ -96,6 +110,23 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 .check-item input[type=radio]{width:18px;height:18px;accent-color:var(--vermelho);cursor:pointer;flex-shrink:0;}
 .check-item label{font-size:14px;cursor:pointer;flex:1;}
 
+/* Rastreador pré-checagem */
+.tracker-check{background:#1a1000;border:2px solid #443300;border-radius:12px;padding:14px;margin-bottom:14px;}
+.tracker-check-title{font-size:12px;font-weight:800;color:#ffaa44;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;}
+.tracker-opts{display:flex;flex-direction:column;gap:8px;}
+.tracker-opt{display:flex;align-items:center;gap:10px;background:var(--cinza2);padding:10px 12px;border-radius:10px;cursor:pointer;}
+.tracker-opt input[type=radio]{width:18px;height:18px;accent-color:#ff8844;cursor:pointer;flex-shrink:0;}
+.tracker-opt label{font-size:14px;cursor:pointer;flex:1;}
+.tracker-opt.opt-ok{background:#0d1a0d;}
+.tracker-opt.opt-problema{background:#1a0d0d;}
+
+/* Formulário recolhimento — oculto se indisponivel */
+.form-recolhimento{transition:opacity 0.3s;}
+.form-recolhimento.hidden{display:none;}
+
+/* Botão indisponivel no modal */
+.btn-indisponivel{width:100%;padding:14px;border-radius:10px;border:2px solid #ff8844;background:#1a0800;color:#ff8844;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:8px;letter-spacing:0.5px;}
+
 .toggle-group{display:flex;flex-direction:column;gap:10px;}
 .toggle-row{display:flex;align-items:center;gap:10px;background:var(--cinza2);padding:10px 12px;border-radius:10px;}
 .toggle-label{font-size:13px;font-weight:600;min-width:72px;}
@@ -104,8 +135,9 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 .toggle-sim.active{background:#0d2b0d;border-color:#44cc44;color:#44cc44;}
 .toggle-nao.active{background:#2b0d0d;border-color:#ff4444;color:#ff4444;}
 
-.obs-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:10px 12px;border-radius:10px;font-size:14px;min-height:80px;resize:none;outline:none;font-family:inherit;}
+.obs-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:10px 12px;border-radius:10px;font-size:14px;min-height:80px;resize:none;outline:none;font-family:inherit;text-transform:uppercase;}
 .obs-input:focus{border-color:var(--vermelho);}
+.obs-input::placeholder{text-transform:none;}
 .foto-area{border:2px dashed #444;border-radius:12px;padding:20px;text-align:center;cursor:pointer;margin-bottom:8px;}
 .foto-preview{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
 .foto-thumb{width:72px;height:72px;border-radius:8px;object-fit:cover;border:2px solid #444;}
@@ -114,18 +146,19 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 .foto-ts{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,0.7);color:#ffcc00;font-size:8px;font-weight:700;text-align:center;padding:2px;border-radius:0 0 8px 8px;line-height:1.2;}
 
 .divider{height:1px;background:#333;margin:14px 0;}
-.local-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:10px 12px;border-radius:10px;font-size:14px;outline:none;}
+.local-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:10px 12px;border-radius:10px;font-size:14px;outline:none;text-transform:uppercase;}
 .local-input:focus{border-color:var(--vermelho);}
+.local-input::placeholder{text-transform:none;}
 
 .report-text{background:var(--cinza2);border-radius:10px;padding:14px;font-size:13px;line-height:1.6;white-space:pre-wrap;font-family:monospace;color:#ddd;border:1px solid #333;max-height:300px;overflow-y:auto;}
 
-.search-bar{background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:10px 14px;border-radius:10px;width:100%;font-size:14px;outline:none;margin-bottom:12px;}
+.search-bar{background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:10px 14px;border-radius:10px;width:100%;font-size:14px;outline:none;margin-bottom:10px;}
 .search-bar:focus{border-color:var(--vermelho);}
 
-.filter-row{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px;}
-.filter-row::-webkit-scrollbar{display:none;}
-.filter-chip{padding:6px 12px;border-radius:20px;font-size:12px;font-weight:600;background:var(--cinza2);color:var(--texto-sec);border:1px solid #444;cursor:pointer;white-space:nowrap;flex-shrink:0;}
-.filter-chip.active{background:var(--vermelho);color:white;border-color:var(--vermelho);}
+/* DROPDOWN FILTRO */
+.filter-wrap{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
+.filter-select{flex:1;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:8px 12px;border-radius:10px;font-size:13px;font-weight:600;outline:none;appearance:none;cursor:pointer;}
+.filter-select:focus{border-color:var(--vermelho);}
 
 .confirm-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:300;align-items:center;justify-content:center;}
 .confirm-overlay.open{display:flex;}
@@ -164,12 +197,21 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 .login-senha-wrap.show{display:block;}
 .login-senha-input{width:100%;background:var(--cinza2);border:1px solid #444;color:var(--branco);padding:12px;border-radius:10px;font-size:15px;outline:none;margin-bottom:10px;}
 .login-senha-input:focus{border-color:var(--vermelho);}
+#loginNomeInput{text-transform:uppercase;}
+#loginNomeInput::placeholder{text-transform:none;}
 .login-erro{color:#ff4444;font-size:12px;margin-bottom:8px;display:none;}
 .login-perfil-badge{font-size:11px;color:var(--texto-sec);display:flex;align-items:center;gap:4px;cursor:pointer;}
 .login-perfil-badge span{color:var(--vermelho);font-weight:700;}
 .login-nome-wrap{display:none;margin-top:16px;}
 .login-nome-wrap.show{display:block;}
 .login-nome-hint{font-size:12px;color:var(--texto-sec);margin-bottom:8px;text-align:center;}
+
+/* Modal resolução indisponível */
+.resolucao-opts{display:flex;flex-direction:column;gap:10px;margin-bottom:16px;}
+.resolucao-btn{width:100%;padding:14px 16px;border-radius:12px;border:none;font-size:14px;font-weight:700;cursor:pointer;text-align:left;display:flex;align-items:center;gap:10px;}
+.resolucao-btn-comunicou{background:#0d1a0d;color:#88cc88;border:1px solid #2a5a2a;}
+.resolucao-btn-interior{background:#1a0d2b;color:#cc88ff;border:1px solid #4a2a6a;}
+.resolucao-btn-resolvido{background:#1a1a0d;color:#cccc88;border:1px solid #4a4a2a;}
 </style>
 </head>
 <body>
@@ -220,12 +262,20 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 <!-- LISTA -->
 <div class="page active" id="pageLista">
   <input class="search-bar" id="searchInput" placeholder="🔍 Buscar placa ou modelo..." oninput="renderLista()">
-  <div class="filter-row">
-    <div class="filter-chip active" onclick="setFilter('todos',this)">Todos</div>
-    <div class="filter-chip" onclick="setFilter('pendente',this)">Pendentes</div>
-    <div class="filter-chip" onclick="setFilter('recolhido',this)">Recolhidos</div>
-    <div class="filter-chip" onclick="setFilter('devolvido',this)">Entregues</div>
-    <div class="filter-chip" onclick="setFilter('nao_localizado',this)">Não Loc.</div>
+  <div class="filter-wrap">
+    <select class="filter-select" id="filtroSelect" onchange="setFilterDrop(this.value)">
+      <option value="todos">📋 Todos</option>
+      <option value="pendente">⏳ Pendentes</option>
+      <option value="prioridade">⚡ Prioridade</option>
+      <option value="missao_interior">🗺️ Missão Interior</option>
+      <option value="indisponivel">📡 Indisponíveis</option>
+      <option value="sem_comunicacao">📡 Sem Comunicação</option>
+      <option value="fora_de_area">📡 Fora de Área</option>
+      <option value="recolhido">✅ Recolhidos</option>
+      <option value="devolvido">📦 Entregues</option>
+      <option value="nao_localizado">❌ Não Localizados</option>
+      <option value="resolvido">☑️ Resolvidos</option>
+    </select>
   </div>
   <div id="listaContainer"><div class="loading"><div class="loading-spin">🔄</div><div style="margin-top:10px;font-size:13px;">Carregando...</div></div></div>
 </div>
@@ -259,6 +309,7 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
   </div>
   <div id="finBreakdown"></div>
   <button class="btn-full btn-primary" onclick="gerarRelatorioFinanceiro()">📋 Gerar Relatório Financeiro</button>
+  <button class="btn-full btn-secondary" onclick="gerarRelatorioIndisponivel()" style="background:#1a0a00;color:#ff8844;border:1px solid #ff8844;">📡 Relatório Indisponíveis</button>
   <button class="btn-full btn-secondary" id="btnConsolidado" onclick="gerarConsolidadoDia()" style="display:none">📦 Consolidado Diário</button>
 </div>
 
@@ -299,6 +350,13 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
     </select>
   </div>
   <div class="form-group">
+    <label class="form-label">Área de Atuação</label>
+    <select class="form-select" id="cadAreaAtuacao">
+      <option value="local">📍 Na Área (padrão)</option>
+      <option value="interior">🗺️ Missão Interior do Estado</option>
+    </select>
+  </div>
+  <div class="form-group">
     <label class="form-label">Observação Inicial (opcional)</label>
     <textarea class="obs-input" id="cadObs" placeholder="Informações adicionais, endereço, contato..."></textarea>
   </div>
@@ -314,66 +372,123 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
     <div class="modal-placa" id="modalPlaca">—</div>
     <div class="modal-sub" id="modalSub">—</div>
 
-    <div class="section-title">Status do Veículo</div>
-    <div class="toggle-group">
-      <div class="toggle-row">
-        <span class="toggle-label">🔖 Placa</span>
-        <div class="toggle-opts">
-          <button class="toggle-btn toggle-sim active" id="tglPlacaSim" onclick="setToggle('placa','sim')">✅ Com placa</button>
-          <button class="toggle-btn toggle-nao" id="tglPlacaNao" onclick="setToggle('placa','nao')">❌ Sem placa</button>
+    <!-- PRÉ-CHECAGEM RASTREADOR (só MAVE/MOVVI/LOCAGORA) -->
+    <div class="tracker-check" id="trackerCheckWrap">
+      <div class="tracker-check-title">📡 Status do Rastreador</div>
+      <div class="tracker-opts" id="trackerOpts">
+        <div class="tracker-opt opt-ok">
+          <input type="radio" name="tracker" id="trk0" value="comunicando" onchange="onTrackerChange(this.value)">
+          <label for="trk0">✅ Comunicando normalmente</label>
+        </div>
+        <div class="tracker-opt opt-problema">
+          <input type="radio" name="tracker" id="trk1" value="sem_comunicacao" onchange="onTrackerChange(this.value)">
+          <label for="trk1">📡 Sem comunicação</label>
+        </div>
+        <div class="tracker-opt opt-problema">
+          <input type="radio" name="tracker" id="trk2" value="fora_de_area" onchange="onTrackerChange(this.value)">
+          <label for="trk2">📡 Fora de área</label>
+        </div>
+        <div class="tracker-opt opt-problema">
+          <input type="radio" name="tracker" id="trk3" value="fora_area_sem_sinal" onchange="onTrackerChange(this.value)">
+          <label for="trk3">📡 Fora de área sem comunicação</label>
         </div>
       </div>
-      <div class="toggle-row">
-        <span class="toggle-label">🔑 Chave</span>
-        <div class="toggle-opts">
-          <button class="toggle-btn toggle-sim active" id="tglChaveSim" onclick="setToggle('chave','sim')">✅ Com chave</button>
-          <button class="toggle-btn toggle-nao" id="tglChaveNao" onclick="setToggle('chave','nao')">❌ Sem chave</button>
+    </div>
+
+    <!-- BOTÃO REGISTRAR INDISPONÍVEL (aparece quando tracker com problema) -->
+    <div id="btnIndisponivelWrap" style="display:none;">
+      <div style="font-size:13px;color:#ff8844;margin-bottom:12px;padding:10px;background:#1a0800;border-radius:8px;">⚠️ Com problema de rastreador, o recolhimento não é realizado. Registre como indisponível para gerar lista de autorização.</div>
+      <button class="btn-indisponivel" onclick="confirmarIndisponivel()">📡 Registrar como Indisponível</button>
+    </div>
+
+    <!-- FORMULÁRIO NORMAL (oculto quando indisponível selecionado) -->
+    <div class="form-recolhimento" id="formRecolhimento">
+      <div class="section-title">Status do Veículo</div>
+      <div class="toggle-group">
+        <div class="toggle-row">
+          <span class="toggle-label">🔖 Placa</span>
+          <div class="toggle-opts">
+            <button class="toggle-btn toggle-sim active" id="tglPlacaSim" onclick="setToggle('placa','sim')">✅ Com placa</button>
+            <button class="toggle-btn toggle-nao" id="tglPlacaNao" onclick="setToggle('placa','nao')">❌ Sem placa</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">🔑 Chave</span>
+          <div class="toggle-opts">
+            <button class="toggle-btn toggle-sim active" id="tglChaveSim" onclick="setToggle('chave','sim')">✅ Com chave</button>
+            <button class="toggle-btn toggle-nao" id="tglChaveNao" onclick="setToggle('chave','nao')">❌ Sem chave</button>
+          </div>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">⚠️ Avarias</span>
+          <div class="toggle-opts">
+            <button class="toggle-btn toggle-nao active" id="tglAvariasSim" onclick="setToggle('avarias','sim')">Sim</button>
+            <button class="toggle-btn toggle-sim" id="tglAvariasnao" onclick="setToggle('avarias','nao')">Não</button>
+          </div>
         </div>
       </div>
-      <div class="toggle-row">
-        <span class="toggle-label">⚠️ Avarias</span>
-        <div class="toggle-opts">
-          <button class="toggle-btn toggle-nao active" id="tglAvariasSim" onclick="setToggle('avarias','sim')">Sim</button>
-          <button class="toggle-btn toggle-sim" id="tglAvariasnao" onclick="setToggle('avarias','nao')">Não</button>
-        </div>
+
+      <div class="section-title">Situação na Abordagem</div>
+      <div class="check-group" id="situacaoGroup"></div>
+
+      <div class="section-title">Quem Estava com a Moto</div>
+      <div class="check-group">
+        <div class="check-item"><input type="radio" name="quem" id="q1" value="Locatário"><label for="q1">Locatário</label></div>
+        <div class="check-item"><input type="radio" name="quem" id="q2" value="Familiar"><label for="q2">Familiar</label></div>
+        <div class="check-item"><input type="radio" name="quem" id="q3" value="Terceiro"><label for="q3">Terceiro</label></div>
       </div>
+
+      <div class="section-title">Local da Abordagem</div>
+      <input class="local-input" id="modalLocal" placeholder="Ex: Locadora de Castanhal, Bairro do Aurá...">
+
+      <div class="section-title">Observações</div>
+      <textarea class="obs-input" id="modalObs" placeholder="Descreva detalhes da ocorrência..."></textarea>
+
+      <div class="section-title">Foto com Timestamp</div>
+      <div class="foto-area" onclick="document.getElementById('fotoInput').click()">
+        <div style="font-size:32px;margin-bottom:6px;">📷</div>
+        <div style="font-size:13px;color:var(--texto-sec);">Toque para tirar foto</div>
+        <div style="font-size:11px;color:#666;margin-top:4px;">Timestamp gravado • Toque na foto para compartilhar</div>
+      </div>
+      <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none" multiple onchange="processarFotos(event)">
+      <div class="foto-preview" id="fotoPreview"></div>
+
+      <div class="divider"></div>
+      <button class="btn-full btn-primary" onclick="confirmarRecolhimento()" style="margin-bottom:8px;">✅ Confirmar Recolhimento</button>
     </div>
 
-    <div class="section-title">Situação na Abordagem</div>
-    <div class="check-group">
-      <div class="check-item"><input type="radio" name="situacao" id="sit1" value="Entregue voluntariamente"><label for="sit1">Entregue voluntariamente</label></div>
-      <div class="check-item"><input type="radio" name="situacao" id="sit2" value="Resistência verbal — resolvida"><label for="sit2">Resistência verbal — resolvida</label></div>
-      <div class="check-item"><input type="radio" name="situacao" id="sit3" value="Resistência física — resolvida"><label for="sit3">Resistência física — resolvida</label></div>
-      <div class="check-item"><input type="radio" name="situacao" id="sit4" value="Ausente — recolhida no local"><label for="sit4">Ausente — recolhida no local</label></div>
-      <div class="check-item"><input type="radio" name="situacao" id="sit5" value="Terceiros entregaram"><label for="sit5">Terceiros entregaram</label></div>
-      <div class="check-item"><input type="radio" name="situacao" id="sit6" value="Ausente — não localizada"><label for="sit6">Ausente — não localizada ❌</label></div>
-    </div>
-
-    <div class="section-title">Quem Estava com a Moto</div>
-    <div class="check-group">
-      <div class="check-item"><input type="radio" name="quem" id="q1" value="Locatário"><label for="q1">Locatário</label></div>
-      <div class="check-item"><input type="radio" name="quem" id="q2" value="Familiar"><label for="q2">Familiar</label></div>
-      <div class="check-item"><input type="radio" name="quem" id="q3" value="Terceiro"><label for="q3">Terceiro</label></div>
-    </div>
-
-    <div class="section-title">Local da Abordagem</div>
-    <input class="local-input" id="modalLocal" placeholder="Ex: Locadora de Castanhal, Bairro do Aurá...">
-
-    <div class="section-title">Observações</div>
-    <textarea class="obs-input" id="modalObs" placeholder="Descreva detalhes da ocorrência..."></textarea>
-
-    <div class="section-title">Foto com Timestamp</div>
-    <div class="foto-area" onclick="document.getElementById('fotoInput').click()">
-      <div style="font-size:32px;margin-bottom:6px;">📷</div>
-      <div style="font-size:13px;color:var(--texto-sec);">Toque para tirar foto</div>
-      <div style="font-size:11px;color:#666;margin-top:4px;">Timestamp gravado • Toque na foto para compartilhar</div>
-    </div>
-    <input type="file" id="fotoInput" accept="image/*" capture="environment" style="display:none" multiple onchange="processarFotos(event)">
-    <div class="foto-preview" id="fotoPreview"></div>
-
-    <div class="divider"></div>
-    <button class="btn-full btn-primary" onclick="confirmarRecolhimento()" style="margin-bottom:8px;">✅ Confirmar Recolhimento</button>
     <button class="btn-full btn-secondary" onclick="fecharModal()">Cancelar</button>
+  </div>
+</div>
+
+<!-- MODAL RESOLUÇÃO INDISPONÍVEL -->
+<div class="modal-overlay" id="modalResolucao">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📡 Resolver Indisponível</div>
+    <div class="modal-placa" id="resPlaca">—</div>
+    <div class="modal-sub" id="resSub">—</div>
+    <div class="section-title">O que aconteceu?</div>
+    <div class="resolucao-opts">
+      <button class="resolucao-btn resolucao-btn-comunicou" onclick="resolverIndisponivel('prioridade')">
+        ⚡ Voltou a comunicar — Prioridade
+        <span style="font-size:11px;display:block;font-weight:400;margin-top:2px;">Volta para pendentes com prioridade ⚡</span>
+      </button>
+      <button class="resolucao-btn resolucao-btn-interior" onclick="resolverIndisponivel('missao_interior')">
+        🗺️ Missão Interior do Estado
+        <span style="font-size:11px;display:block;font-weight:400;margin-top:2px;">Vai para lista de missão interior</span>
+      </button>
+      <button class="resolucao-btn resolucao-btn-resolvido" onclick="abrirMotivoResolucao()">
+        ☑️ Resolvido — Encerrar caso
+        <span style="font-size:11px;display:block;font-weight:400;margin-top:2px;">Locadora pagou, moto vendida, etc.</span>
+      </button>
+    </div>
+    <div id="motivoWrap" style="display:none;">
+      <div class="section-title">Motivo do Encerramento</div>
+      <textarea class="obs-input" id="motivoInput" placeholder="Ex: Cliente pagou dívida, moto foi vendida, rastreador atualizou..."></textarea>
+      <button class="btn-full btn-green" onclick="resolverIndisponivel('resolvido')" style="margin-top:8px;">✅ Confirmar Encerramento</button>
+    </div>
+    <button class="btn-full btn-secondary" onclick="document.getElementById('modalResolucao').classList.remove('open')">Cancelar</button>
   </div>
 </div>
 
@@ -444,12 +559,10 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 <script>
 'use strict';
 
-// ===== SUPABASE =====
 const SURL = 'https://delngkkleatwjtjoyjck.supabase.co';
 const SKEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRlbG5na2tsZWF0d2p0am95amNrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTAzNzExNzgsImV4cCI6MjEwNTk0NzE3OH0.STg-kKmWcDu5gM9Y_UP3Zzvv6IMXPcLirDOwNYtFCfY';
 const sb = window.supabase ? window.supabase.createClient(SURL, SKEY) : null;
 
-// ===== ESTADO =====
 let perfilAtual = null;
 let agenteNome = '';
 let clienteAtual = 'MAVE';
@@ -463,6 +576,7 @@ let confirmCallback = null;
 let motosCache = {};
 let realtimeSub = null;
 let toggleState = { placa: 'sim', chave: 'sim', avarias: 'nao' };
+let trackerAtual = null; // valor selecionado no tracker
 
 const VALORES = {
   MAVE:     { inadimplencia: null, furto: 450 },
@@ -471,7 +585,6 @@ const VALORES = {
   MOTTU:    { inadimplencia: null, furto: null },
 };
 
-// ===== TOAST =====
 function showToast(msg, dur) {
   dur = dur || 2500;
   const t = document.getElementById('toast');
@@ -481,7 +594,6 @@ function showToast(msg, dur) {
   setTimeout(() => t.classList.remove('show'), dur);
 }
 
-// ===== SYNC =====
 function setSyncStatus(s) {
   const dot = document.getElementById('syncDot');
   const lbl = document.getElementById('syncLabel');
@@ -490,7 +602,6 @@ function setSyncStatus(s) {
   lbl.textContent = s === 'online' ? 'sincronizado' : s === 'syncing' ? 'salvando...' : 'offline';
 }
 
-// ===== AUTH =====
 async function sha256(txt) {
   const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(txt));
   return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -530,7 +641,6 @@ async function confirmarSenha() {
 }
 
 function mostrarNome() {
-  // Se já tem nome salvo, entra direto
   const nomeSalvo = localStorage.getItem('bravoseg_agente_nome');
   if (nomeSalvo) { agenteNome = nomeSalvo; entrar('agente'); return; }
   document.getElementById('loginNomeWrap').classList.add('show');
@@ -540,23 +650,20 @@ function mostrarNome() {
 
 function confirmarNome() {
   const inp = document.getElementById('loginNomeInput');
-  const nome = inp.value.trim();
+  const nome = inp.value.trim().toUpperCase();
   if (!nome) { inp.style.borderColor = '#ff4444'; setTimeout(() => inp.style.borderColor = '#444', 1500); return; }
   agenteNome = nome;
   localStorage.setItem('bravoseg_agente_nome', nome);
   entrar('agente');
 }
 
-function entrar(perfil, opts) {
+function entrar(perfil) {
   perfilAtual = perfil;
   localStorage.setItem('bravoseg_perfil', perfil);
-  if (perfil === 'agente') {
-    agenteNome = agenteNome || localStorage.getItem('bravoseg_agente_nome') || '';
-  }
+  if (perfil === 'agente') agenteNome = agenteNome || localStorage.getItem('bravoseg_agente_nome') || '';
   document.getElementById('loginOverlay').style.display = 'none';
   const label = perfil === 'gestor' ? 'Gestor' : (agenteNome || 'Agente');
   document.getElementById('perfilLabel').textContent = label;
-  // Gestor vê tudo; Agente só vê Lista
   const exibir = perfil === 'gestor';
   document.getElementById('navFinanceiro').style.display = exibir ? '' : 'none';
   document.getElementById('navCadastro').style.display = exibir ? '' : 'none';
@@ -566,22 +673,13 @@ function entrar(perfil, opts) {
 function sair() {
   perfilAtual = null;
   localStorage.removeItem('bravoseg_perfil');
-  // Limpa campos de login
   document.getElementById('loginSenhaWrap').classList.remove('show');
   document.getElementById('loginNomeWrap').classList.remove('show');
   document.getElementById('loginSenhaInput').value = '';
   document.getElementById('loginNomeInput').value = '';
   document.getElementById('loginErro').style.display = 'none';
-  // Desconecta realtime
   if (realtimeSub && sb) { try { sb.removeChannel(realtimeSub); } catch(e) {} realtimeSub = null; }
   document.getElementById('loginOverlay').style.display = 'flex';
-}
-
-function trocarAgente() {
-  // Permite trocar o nome do agente sem sair
-  localStorage.removeItem('bravoseg_agente_nome');
-  agenteNome = '';
-  sair();
 }
 
 // ===== SUPABASE CRUD =====
@@ -590,8 +688,6 @@ async function carregarMotos(cliente) {
     if (!sb) throw new Error('Supabase indisponível');
     const { data, error } = await sb.from('motos').select('*').eq('cliente', cliente).order('created_at', { ascending: false });
     if (error) throw error;
-    const ord = { pendente: 0, recolhido: 1, devolvido: 2, nao_localizado: 3 };
-    data.sort((a, b) => (ord[a.status] || 0) - (ord[b.status] || 0));
     motosCache[cliente] = data;
     setSyncStatus('online');
     return data;
@@ -609,7 +705,6 @@ async function salvarMoto(moto) {
     const row = motoParaRow(moto);
     const { error } = await sb.from('motos').upsert(row, { onConflict: 'id' });
     if (error) throw error;
-    // Atualiza cache local
     if (!motosCache[moto.cliente]) motosCache[moto.cliente] = [];
     const idx = motosCache[moto.cliente].findIndex(m => m.id === moto.id);
     if (idx >= 0) motosCache[moto.cliente][idx] = row;
@@ -683,6 +778,9 @@ function motoParaRow(m) {
     reincidencia: m.reincidencia || 0,
     ultima_recuperacao: m.ultimaRecuperacao || null,
     agente_recolhimento: m.agenteRecolhimento || null,
+    prioridade: m.prioridade || false,
+    missao_interior: m.missaoInterior || false,
+    motivo_resolucao: m.motivoResolucao || null,
   };
 }
 
@@ -711,6 +809,9 @@ function rowParaMoto(r) {
     reincidencia: r.reincidencia || 0,
     ultimaRecuperacao: r.ultima_recuperacao,
     agenteRecolhimento: r.agente_recolhimento,
+    prioridade: r.prioridade || false,
+    missaoInterior: r.missao_interior || false,
+    motivoResolucao: r.motivo_resolucao,
   };
 }
 
@@ -735,7 +836,6 @@ function ativarRealtime(cliente) {
           else motosCache[cliente].unshift(payload.new);
         }
       } catch (err) {
-        console.warn('Realtime error:', err);
         carregarMotos(cliente);
       }
       if (paginaAtual === 'Lista') renderLista();
@@ -774,10 +874,8 @@ function setCliente(c, el) {
   }
 }
 
-function setFilter(f, el) {
+function setFilterDrop(f) {
   filtroAtual = f;
-  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
-  if (el) el.classList.add('active');
   renderLista();
 }
 
@@ -789,20 +887,81 @@ async function carregarERendar() {
 }
 
 // ===== LISTA =====
-function statusLabel(s) {
-  return { pendente: 'Pendente', recolhido: 'Recolhido', devolvido: 'Entregue', nao_localizado: 'Não Loc.' }[s] || s;
+function statusLabel(r) {
+  if (r.status === 'indisponivel') {
+    if (r.situacao === 'sem_comunicacao') return 'Sem Sinal';
+    if (r.situacao === 'fora_de_area') return 'Fora de Área';
+    if (r.situacao === 'fora_area_sem_sinal') return 'F.Área+Sinal';
+    return 'Indisponível';
+  }
+  if (r.status === 'resolvido') return 'Resolvido';
+  if (r.status === 'nao_localizado') {
+    if (r.situacao === 'Sem comunicação') return 'Sem Sinal';
+    if (r.situacao === 'Fora de área') return 'Fora de Área';
+    if (r.situacao === 'Fora de área sem comunicação') return 'F.Área/Sinal';
+    return 'Não Loc.';
+  }
+  if (r.status === 'pendente') {
+    if (r.missao_interior) return 'Missão Interior';
+    if (r.prioridade) return '⚡ Prioridade';
+    return 'Pendente';
+  }
+  return { recolhido: 'Recolhido', devolvido: 'Entregue' }[r.status] || r.status;
 }
-function statusClass(s) {
-  return { pendente: 'status-pendente', recolhido: 'status-recolhido', devolvido: 'status-devolvido', nao_localizado: 'status-nao-loc' }[s] || 'status-pendente';
+
+function statusClass(r) {
+  if (r.status === 'indisponivel') return 'status-indisponivel';
+  if (r.status === 'resolvido') return 'status-resolvido';
+  if (r.status === 'pendente' && r.missao_interior) return 'status-interior';
+  if (r.status === 'pendente' && r.prioridade) return 'status-prioridade';
+  return { pendente: 'status-pendente', recolhido: 'status-recolhido', devolvido: 'status-devolvido', nao_localizado: 'status-nao-loc' }[r.status] || 'status-pendente';
+}
+
+function cardClass(r) {
+  if (r.status === 'indisponivel') return 'card card-indisponivel';
+  if (r.status === 'resolvido') return 'card card-resolvido';
+  if (r.status === 'pendente' && r.missao_interior) return 'card card-interior';
+  if (r.status === 'pendente' && r.prioridade) return 'card card-prioridade';
+  return 'card';
+}
+
+function sortMotos(rows) {
+  // Ordem: prioridade ⚡ → pendentes → missão interior → indisponivel → recolhido → devolvido → resolvido → nao_localizado
+  const ord = r => {
+    if (r.status === 'pendente' && r.prioridade) return 0;
+    if (r.status === 'pendente' && !r.missao_interior) return 1;
+    if (r.status === 'pendente' && r.missao_interior) return 2;
+    if (r.status === 'indisponivel') return 3;
+    if (r.status === 'recolhido') return 4;
+    if (r.status === 'devolvido') return 5;
+    if (r.status === 'resolvido') return 6;
+    if (r.status === 'nao_localizado') return 7;
+    return 8;
+  };
+  return [...rows].sort((a, b) => ord(a) - ord(b));
+}
+
+function matchFiltro(r) {
+  if (filtroAtual === 'todos') return true;
+  if (filtroAtual === 'pendente') return r.status === 'pendente' && !r.prioridade && !r.missao_interior;
+  if (filtroAtual === 'prioridade') return r.status === 'pendente' && r.prioridade;
+  if (filtroAtual === 'missao_interior') return r.status === 'pendente' && r.missao_interior;
+  if (filtroAtual === 'indisponivel') return r.status === 'indisponivel';
+  if (filtroAtual === 'sem_comunicacao') return r.status === 'indisponivel' && r.situacao === 'sem_comunicacao';
+  if (filtroAtual === 'fora_de_area') return r.status === 'indisponivel' && (r.situacao === 'fora_de_area' || r.situacao === 'fora_area_sem_sinal');
+  if (filtroAtual === 'recolhido') return r.status === 'recolhido';
+  if (filtroAtual === 'devolvido') return r.status === 'devolvido';
+  if (filtroAtual === 'nao_localizado') return r.status === 'nao_localizado';
+  if (filtroAtual === 'resolvido') return r.status === 'resolvido';
+  return true;
 }
 
 function renderLista() {
   const cont = document.getElementById('listaContainer');
   if (!cont) return;
   const busca = (document.getElementById('searchInput').value || '').toUpperCase().trim();
-  const ord = { pendente: 0, recolhido: 1, devolvido: 2, nao_localizado: 3 };
-  let rows = [...(motosCache[clienteAtual] || [])].sort((a, b) => (ord[a.status] || 0) - (ord[b.status] || 0));
-  if (filtroAtual !== 'todos') rows = rows.filter(r => r.status === filtroAtual);
+  let rows = sortMotos(motosCache[clienteAtual] || []);
+  rows = rows.filter(r => matchFiltro(r));
   if (busca) rows = rows.filter(r => ((r.placa || '') + ' ' + (r.modelo || '') + ' ' + (r.cor || '')).toUpperCase().includes(busca));
 
   if (!rows.length) {
@@ -810,42 +969,84 @@ function renderLista() {
     return;
   }
 
-  cont.innerHTML = rows.map(r => {
-    const m = rowParaMoto(r);
-    const tipoBadge = m.tipo === 'furto'
-      ? '<span class="tipo-badge tipo-furto">FURTO</span>'
-      : '<span class="tipo-badge tipo-inadimplencia">INADIMP.</span>';
-    const reincBadge = (m.reincidencia || 0) > 0
-      ? '<div class="reincidencia">⚠️ Reincidente ' + m.reincidencia + 'x · Última: ' + (m.ultimaRecuperacao || '—') + '</div>'
-      : '';
-    let btns = '';
-    if (m.status === 'pendente') {
-      btns = '<button class="btn-sm btn-primary" onclick="abrirRecolhimento(\'' + m.id + '\')">📋 Registrar</button>' +
-             '<button class="btn-sm btn-secondary" onclick="confirmarExclusao(\'' + m.id + '\')">🗑️</button>';
-    } else if (m.status === 'recolhido' && clienteAtual === 'MAVE') {
-      btns = '<button class="btn-sm btn-green" onclick="abrirDevolucao(\'' + m.id + '\')">📦 Fazer Entrega</button>' +
-             '<button class="btn-sm btn-blue" onclick="verRelatorio(\'' + m.id + '\')">📋 Ver</button>' +
-             '<button class="btn-sm btn-secondary" onclick="confirmarUndo(\'' + m.id + '\')">↩</button>';
-    } else {
-      btns = '<button class="btn-sm btn-blue" onclick="verRelatorio(\'' + m.id + '\')">📋 Ver</button>' +
-             '<button class="btn-sm btn-secondary" onclick="confirmarUndo(\'' + m.id + '\')">↩</button>';
+  // Agrupa por seção quando filtro = todos
+  const mostrarSecoes = filtroAtual === 'todos';
+  let html = '';
+  let secaoAtual = null;
+
+  rows.forEach(r => {
+    if (mostrarSecoes) {
+      let secao = null;
+      if (r.status === 'pendente' && r.prioridade) secao = 'prioridade';
+      else if (r.status === 'pendente' && r.missao_interior) secao = 'interior';
+      else if (r.status === 'indisponivel') secao = 'indisponivel';
+      else secao = r.status || 'pendente';
+
+      if (secao !== secaoAtual) {
+        secaoAtual = secao;
+        const labels = {
+          prioridade: '⚡ Prioridade',
+          pendente: '⏳ Pendentes',
+          interior: '🗺️ Missão Interior',
+          indisponivel: '📡 Indisponíveis',
+          recolhido: '✅ Recolhidos',
+          devolvido: '📦 Entregues',
+          resolvido: '☑️ Resolvidos',
+          nao_localizado: '❌ Não Localizados',
+        };
+        const cls = (secao === 'prioridade') ? ' secao-prioridade' : (secao === 'interior') ? ' secao-interior' : '';
+        html += '<div class="secao-label' + cls + '">' + (labels[secao] || secao) + '</div>';
+      }
     }
-    const info = [];
-    if (m.dataRecolhimento) info.push('📅 ' + m.dataRecolhimento);
-    if (m.local) info.push('📍 ' + m.local);
-    if (m.agenteRecolhimento) info.push('👷 ' + m.agenteRecolhimento);
-    if (m.devRecebedor) info.push('📦 Entregue: ' + m.devRecebedor);
-    return '<div class="card">' +
-      '<div class="card-header">' +
-        '<div><div class="placa">' + m.placa + ' ' + tipoBadge + '</div>' +
-        '<div class="card-modelo">' + (m.modelo || '') + ' ' + (m.cor || '') + '</div></div>' +
-        '<span class="status-badge ' + statusClass(m.status) + '">' + statusLabel(m.status) + '</span>' +
-      '</div>' +
-      (info.length ? '<div class="card-info">' + info.join(' · ') + '</div>' : '') +
-      reincBadge +
-      '<div class="card-actions">' + btns + '</div>' +
-    '</div>';
-  }).join('');
+    html += renderCard(r);
+  });
+
+  cont.innerHTML = html;
+}
+
+function renderCard(r) {
+  const m = rowParaMoto(r);
+  const tipoBadge = m.tipo === 'furto'
+    ? '<span class="tipo-badge tipo-furto">FURTO</span>'
+    : '<span class="tipo-badge tipo-inadimplencia">INADIMP.</span>';
+  const reincBadge = (m.reincidencia || 0) > 0
+    ? '<div class="reincidencia">⚠️ Reincidente ' + m.reincidencia + 'x · Última: ' + (m.ultimaRecuperacao || '—') + '</div>'
+    : '';
+
+  let btns = '';
+  if (r.status === 'indisponivel') {
+    btns = '<button class="btn-sm btn-laranja" onclick="abrirResolucao(\'' + m.id + '\')">📡 Resolver</button>' +
+           '<button class="btn-sm btn-blue" onclick="verRelatorio(\'' + m.id + '\')">📋 Ver</button>' +
+           '<button class="btn-sm btn-secondary" onclick="confirmarExclusao(\'' + m.id + '\')">🗑️</button>';
+  } else if (r.status === 'pendente') {
+    btns = '<button class="btn-sm btn-primary" onclick="abrirRecolhimento(\'' + m.id + '\')">📋 Registrar</button>' +
+           '<button class="btn-sm btn-secondary" onclick="confirmarExclusao(\'' + m.id + '\')">🗑️</button>';
+  } else if (r.status === 'recolhido' && clienteAtual === 'MAVE') {
+    btns = '<button class="btn-sm btn-green" onclick="abrirDevolucao(\'' + m.id + '\')">📦 Fazer Entrega</button>' +
+           '<button class="btn-sm btn-blue" onclick="verRelatorio(\'' + m.id + '\')">📋 Ver</button>' +
+           '<button class="btn-sm btn-secondary" onclick="confirmarUndo(\'' + m.id + '\')">↩</button>';
+  } else {
+    btns = '<button class="btn-sm btn-blue" onclick="verRelatorio(\'' + m.id + '\')">📋 Ver</button>' +
+           '<button class="btn-sm btn-secondary" onclick="confirmarUndo(\'' + m.id + '\')">↩</button>';
+  }
+
+  const info = [];
+  if (m.dataRecolhimento) info.push('📅 ' + m.dataRecolhimento);
+  if (m.local) info.push('📍 ' + m.local);
+  if (m.agenteRecolhimento) info.push('👷 ' + m.agenteRecolhimento);
+  if (m.devRecebedor) info.push('📦 Entregue: ' + m.devRecebedor);
+  if (m.motivoResolucao) info.push('📝 ' + m.motivoResolucao.slice(0, 40));
+
+  return '<div class="' + cardClass(r) + '">' +
+    '<div class="card-header">' +
+      '<div><div class="placa">' + m.placa + ' ' + tipoBadge + '</div>' +
+      '<div class="card-modelo">' + (m.modelo || '') + ' ' + (m.cor || '') + '</div></div>' +
+      '<span class="status-badge ' + statusClass(r) + '">' + statusLabel(r) + '</span>' +
+    '</div>' +
+    (info.length ? '<div class="card-info">' + info.join(' · ') + '</div>' : '') +
+    reincBadge +
+    '<div class="card-actions">' + btns + '</div>' +
+  '</div>';
 }
 
 // ===== CADASTRO =====
@@ -853,6 +1054,7 @@ async function cadastrarMoto() {
   const placa = document.getElementById('cadPlaca').value.trim().toUpperCase();
   if (!placa) { showToast('❌ Placa obrigatória'); return; }
   const cliente = document.getElementById('cadCliente').value;
+  const area = document.getElementById('cadAreaAtuacao').value;
   const chave = cliente + '_' + placa;
   const rec = await getReincidencia(chave);
   const moto = {
@@ -866,12 +1068,15 @@ async function cadastrarMoto() {
     dataCadastro: new Date().toLocaleDateString('pt-BR'),
     reincidencia: rec ? rec.count : 0,
     ultimaRecuperacao: rec ? rec.ultima : null,
+    missaoInterior: area === 'interior',
+    prioridade: false,
   };
   showToast('⏳ Salvando...');
   const ok = await salvarMoto(moto);
   if (ok) {
     ['cadPlaca', 'cadModelo', 'cadCor', 'cadObs'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
     document.getElementById('cadTipo').value = 'inadimplencia';
+    document.getElementById('cadAreaAtuacao').value = 'local';
     clienteAtual = cliente;
     showToast('✅ Moto cadastrada!');
     setTimeout(() => setPage('Lista'), 800);
@@ -894,6 +1099,43 @@ function setToggle(campo, valor) {
   if (naoEl) naoEl.className = cfg.naoClass + (valor === 'nao' ? ' active' : '');
 }
 
+// ===== RASTREADOR =====
+const CLIENTES_COM_RASTREADOR = ['MAVE', 'MOVVI', 'LOCAGORA'];
+
+function onTrackerChange(valor) {
+  trackerAtual = valor;
+  const temProblema = valor !== 'comunicando';
+  document.getElementById('btnIndisponivelWrap').style.display = temProblema ? 'block' : 'none';
+  document.getElementById('formRecolhimento').classList.toggle('hidden', temProblema);
+}
+
+// ===== SITUAÇÕES POR CLIENTE =====
+const SITUACOES_BASE = [
+  'Entregue voluntariamente',
+  'Resistência verbal — resolvida',
+  'Resistência física — resolvida',
+  'Ausente — recolhida no local',
+  'Terceiros entregaram',
+];
+const SITUACOES_COM_RASTREADOR = [...SITUACOES_BASE];
+const SITUACOES_MOTTU = [...SITUACOES_BASE, 'Não localizado'];
+
+function getSituacoes(cliente) {
+  if (cliente === 'MOTTU') return SITUACOES_MOTTU;
+  return SITUACOES_COM_RASTREADOR;
+}
+
+function renderSituacoes(cliente) {
+  const grupo = document.getElementById('situacaoGroup');
+  if (!grupo) return;
+  const opcoes = getSituacoes(cliente);
+  grupo.innerHTML = opcoes.map((s, i) => {
+    const id = 'sit' + i;
+    const icone = s === 'Não localizado' ? ' ❌' : '';
+    return '<div class="check-item"><input type="radio" name="situacao" id="' + id + '" value="' + s + '"><label for="' + id + '">' + s + icone + '</label></div>';
+  }).join('');
+}
+
 // ===== MODAL RECOLHIMENTO =====
 function abrirRecolhimento(id) {
   const r = (motosCache[clienteAtual] || []).find(m => m.id === id);
@@ -901,9 +1143,19 @@ function abrirRecolhimento(id) {
   motoAtual = rowParaMoto(r);
   document.getElementById('modalPlaca').textContent = motoAtual.placa;
   document.getElementById('modalSub').textContent = [motoAtual.modelo, motoAtual.cor].filter(Boolean).join(' — ') || '—';
-  // Reset
+
+  // Reset tracker
+  trackerAtual = null;
+  document.querySelectorAll('input[name="tracker"]').forEach(el => el.checked = false);
+  document.getElementById('btnIndisponivelWrap').style.display = 'none';
+  document.getElementById('formRecolhimento').classList.remove('hidden');
+
+  // Mostrar/ocultar seção rastreador
+  const temRastreador = CLIENTES_COM_RASTREADOR.includes(motoAtual.cliente);
+  document.getElementById('trackerCheckWrap').style.display = temRastreador ? 'block' : 'none';
+
   setToggle('placa', 'sim'); setToggle('chave', 'sim'); setToggle('avarias', 'nao');
-  document.querySelectorAll('input[name="situacao"]').forEach(r => r.checked = false);
+  renderSituacoes(motoAtual.cliente);
   document.querySelectorAll('input[name="quem"]').forEach(r => r.checked = false);
   document.getElementById('modalLocal').value = '';
   document.getElementById('modalObs').value = motoAtual.obs || '';
@@ -919,6 +1171,78 @@ function fecharModal() {
   motoAtual = null;
 }
 
+// ===== REGISTRAR INDISPONÍVEL =====
+async function confirmarIndisponivel() {
+  if (!motoAtual || !trackerAtual) return;
+  ultimaAcao = { tipo: 'indisponivel', motoAnterior: JSON.parse(JSON.stringify(motoAtual)) };
+  const agora = new Date();
+  motoAtual.status = 'indisponivel';
+  motoAtual.situacao = trackerAtual; // sem_comunicacao | fora_de_area | fora_area_sem_sinal
+  motoAtual.agenteRecolhimento = agenteNome || (perfilAtual === 'gestor' ? 'Gestor' : '');
+  motoAtual.dataRecolhimento = agora.toLocaleDateString('pt-BR');
+  motoAtual.horaRecolhimento = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  motoAtual.prioridade = false;
+  const snap = JSON.parse(JSON.stringify(motoAtual));
+  fecharModal();
+  const ok = await salvarMoto(snap);
+  renderLista();
+  if (ok) showToast('📡 Registrado como Indisponível');
+}
+
+// ===== RESOLVER INDISPONÍVEL =====
+function abrirResolucao(id) {
+  const r = (motosCache[clienteAtual] || []).find(m => m.id === id);
+  if (!r) { showToast('❌ Moto não encontrada'); return; }
+  motoAtual = rowParaMoto(r);
+  document.getElementById('resPlaca').textContent = motoAtual.placa;
+  document.getElementById('resSub').textContent = [motoAtual.modelo, motoAtual.cor].filter(Boolean).join(' — ') || '—';
+  document.getElementById('motivoWrap').style.display = 'none';
+  document.getElementById('motivoInput').value = '';
+  document.getElementById('modalResolucao').classList.add('open');
+}
+
+function abrirMotivoResolucao() {
+  document.getElementById('motivoWrap').style.display = 'block';
+  setTimeout(() => document.getElementById('motivoInput').focus(), 100);
+}
+
+async function resolverIndisponivel(tipo) {
+  if (!motoAtual) return;
+  ultimaAcao = { tipo: 'resolucao', motoAnterior: JSON.parse(JSON.stringify(motoAtual)) };
+
+  if (tipo === 'prioridade') {
+    motoAtual.status = 'pendente';
+    motoAtual.prioridade = true;
+    motoAtual.missaoInterior = false;
+    motoAtual.situacao = null;
+    motoAtual.dataRecolhimento = null;
+    motoAtual.horaRecolhimento = null;
+  } else if (tipo === 'missao_interior') {
+    motoAtual.status = 'pendente';
+    motoAtual.missaoInterior = true;
+    motoAtual.prioridade = false;
+    motoAtual.situacao = null;
+    motoAtual.dataRecolhimento = null;
+    motoAtual.horaRecolhimento = null;
+  } else if (tipo === 'resolvido') {
+    const motivo = document.getElementById('motivoInput').value.trim();
+    if (!motivo) { showToast('❌ Informe o motivo'); return; }
+    motoAtual.status = 'resolvido';
+    motoAtual.motivoResolucao = motivo;
+  }
+
+  document.getElementById('modalResolucao').classList.remove('open');
+  const snap = JSON.parse(JSON.stringify(motoAtual));
+  motoAtual = null;
+  const ok = await salvarMoto(snap);
+  renderLista();
+  if (ok) {
+    const msgs = { prioridade: '⚡ Voltou para pendentes com prioridade!', missao_interior: '🗺️ Enviada para Missão Interior!', resolvido: '☑️ Caso encerrado!' };
+    showToast(msgs[tipo] || '✅ Atualizado');
+    showUndoBar(msgs[tipo] || 'Atualizado');
+  }
+}
+
 // ===== FOTOS =====
 function processarFotos(event) {
   const files = Array.from(event.target.files);
@@ -928,7 +1252,6 @@ function processarFotos(event) {
     const ts = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     const reader = new FileReader();
     reader.onload = function(e) {
-      // base64 — sobrevive ao suspend do iOS ao abrir câmera
       fotosCapturadas.push({ base64: e.target.result, mime: file.type || 'image/jpeg', file, timestamp: ts });
       renderFotoPreview();
     };
@@ -954,9 +1277,7 @@ function removerFoto(i) {
   renderFotoPreview();
 }
 
-function liberarFotos() {
-  fotosCapturadas = [];
-}
+function liberarFotos() { fotosCapturadas = []; }
 
 async function compartilharFoto(i) {
   const f = fotosCapturadas[i];
@@ -967,7 +1288,6 @@ async function compartilharFoto(i) {
   const texto = '📸 BravoSeg · ' + (placa || 'Recolhimento') + (modelo ? ' · ' + modelo : '') + '\n📅 ' + f.timestamp + (agente ? '\n👤 Agente: ' + agente : '');
   const nome = 'BravoSeg_' + f.timestamp.replace(/[/:]/g, '-').replace(/ /g, '_') + '.jpg';
   try {
-    // Converte base64 → Blob → File para share/download
     const res = await fetch(f.base64);
     const blob = await res.blob();
     const fileObj = new File([blob], nome, { type: f.mime });
@@ -975,21 +1295,13 @@ async function compartilharFoto(i) {
       await navigator.share({ files: [fileObj], title: 'BravoSeg Recolhimento', text: texto });
       return;
     }
-  } catch(e) {
-    if (e.name === 'AbortError') return;
-  }
-  // Fallback iOS/desktop: download direto via base64
+  } catch(e) { if (e.name === 'AbortError') return; }
   try {
     const a = document.createElement('a');
-    a.href = f.base64;
-    a.download = nome;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    a.href = f.base64; a.download = nome;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
     showToast('📥 Baixando imagem...', 2000);
-  } catch(e2) {
-    showToast('Erro ao baixar. Toque e segure a imagem para salvar.', 4000);
-  }
+  } catch(e2) { showToast('Toque e segure a imagem para salvar.', 4000); }
 }
 
 // ===== CONFIRMAR RECOLHIMENTO =====
@@ -999,9 +1311,8 @@ async function confirmarRecolhimento() {
   if (!sitEl) { showToast('❌ Selecione a situação'); return; }
   const quemEl = document.querySelector('input[name="quem"]:checked');
   const agora = new Date();
-  const naoLoc = sitEl.value === 'Ausente — não localizada';
+  const naoLoc = sitEl.value === 'Não localizado';
 
-  // Salva snapshot para undo
   ultimaAcao = { tipo: 'recolhimento', motoAnterior: JSON.parse(JSON.stringify(motoAtual)) };
 
   motoAtual.status = naoLoc ? 'nao_localizado' : 'recolhido';
@@ -1013,31 +1324,23 @@ async function confirmarRecolhimento() {
   motoAtual.dataRecolhimento = agora.toLocaleDateString('pt-BR');
   motoAtual.horaRecolhimento = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   motoAtual.statusVeiculo = {
-    comPlaca: toggleState.placa === 'sim',
-    semPlaca: toggleState.placa === 'nao',
-    comChave: toggleState.chave === 'sim',
-    semChave: toggleState.chave === 'nao',
+    comPlaca: toggleState.placa === 'sim', semPlaca: toggleState.placa === 'nao',
+    comChave: toggleState.chave === 'sim', semChave: toggleState.chave === 'nao',
     avarias: toggleState.avarias === 'sim',
   };
-  // Só salva timestamp — foto fica no dispositivo
   motoAtual.fotos = fotosCapturadas.map(f => f.timestamp);
+  motoAtual.prioridade = false;
 
-  // Reincidência
   if (!naoLoc) {
     const chave = motoAtual.cliente + '_' + motoAtual.placa;
     const rec = await getReincidencia(chave);
     const novoCount = (rec ? rec.count : 0) + 1;
-    if (novoCount > 1) {
-      motoAtual.reincidencia = novoCount - 1;
-      motoAtual.ultimaRecuperacao = motoAtual.dataRecolhimento;
-    }
+    if (novoCount > 1) { motoAtual.reincidencia = novoCount - 1; motoAtual.ultimaRecuperacao = motoAtual.dataRecolhimento; }
     await salvarReincidencia(chave, novoCount, motoAtual.dataRecolhimento);
   }
 
-  // Cópia para uso pós-fecharModal
   const motoSnapshot = JSON.parse(JSON.stringify(motoAtual));
   fecharModal();
-
   const ok = await salvarMoto(motoSnapshot);
   renderLista();
   if (ok) {
@@ -1080,12 +1383,38 @@ function fmt(v) { return v ? '☑' : '☐'; }
 function gerarTextoRelatorio(m) {
   const sv = m.statusVeiculo || {};
   const nomes = { MAVE: 'Mave Locadora', MOVVI: 'Movvi Locadora', LOCAGORA: 'Locagora', MOTTU: 'Mottu' };
-  const tipo = m.status === 'nao_localizado' ? 'OCORRÊNCIA' : 'RECOLHIMENTO';
+
+  if (m.status === 'indisponivel') {
+    const sitLabels = { sem_comunicacao: 'Sem comunicação', fora_de_area: 'Fora de área', fora_area_sem_sinal: 'Fora de área sem comunicação' };
+    let t = '📡 OCORRÊNCIA — RASTREADOR INDISPONÍVEL · BravoSeg\n\n';
+    t += '*Cliente:* ' + (nomes[m.cliente] || m.cliente) + '\n';
+    t += '🪧 *Placa:* ' + m.placa + '\n';
+    if (m.modelo || m.cor) t += '🏍️ *Modelo/Cor:* ' + [m.modelo, m.cor].filter(Boolean).join(' ') + '\n';
+    t += '📡 *Status Rastreador:* ' + (sitLabels[m.situacao] || m.situacao || '—') + '\n';
+    t += '📅 *Registrado em:* ' + (m.dataRecolhimento || '—') + '\n';
+    t += '🕐 *Horário:* ' + (m.horaRecolhimento || '—') + '\n';
+    if (m.agenteRecolhimento) t += '👤 *Agente:* ' + m.agenteRecolhimento + '\n';
+    t += '\n⚠️ Veículo aguarda autorização da locadora para missão.\n\n❌ Recolhimento não realizado · BravoSeg';
+    return t;
+  }
+
+  if (m.status === 'resolvido') {
+    let t = '☑️ CASO ENCERRADO · BravoSeg\n\n';
+    t += '*Cliente:* ' + (nomes[m.cliente] || m.cliente) + '\n';
+    t += '🪧 *Placa:* ' + m.placa + '\n';
+    if (m.modelo || m.cor) t += '🏍️ *Modelo/Cor:* ' + [m.modelo, m.cor].filter(Boolean).join(' ') + '\n';
+    t += '📝 *Motivo:* ' + (m.motivoResolucao || '—') + '\n';
+    t += '\n✅ Encerrado · BravoSeg';
+    return t;
+  }
+
+  const ehInterior = m.missaoInterior;
+  const tipo = ehInterior ? 'RECOLHIMENTO — MISSÃO INTERIOR DO ESTADO' : (m.status === 'nao_localizado' ? 'OCORRÊNCIA' : 'RECOLHIMENTO');
   let t = '🏍️ ' + tipo + ' · BravoSeg\n\n';
   t += '*Cliente:* ' + (nomes[m.cliente] || m.cliente) + '\n';
   t += '🪧 *Placa:* ' + m.placa + '\n';
   if (m.modelo || m.cor) t += '🏍️ *Modelo/Cor:* ' + [m.modelo, m.cor].filter(Boolean).join(' ') + '\n';
-  t += '📍 *Local:* ' + (m.local || '—') + '\n';
+  t += '📍 *Local:* ' + (m.local ? m.local.toUpperCase() : '—') + '\n';
   t += '📅 *Data:* ' + (m.dataRecolhimento || '—') + '\n';
   t += '🕐 *Horário:* ' + (m.horaRecolhimento || '—') + '\n';
   if (m.agenteRecolhimento) t += '👤 *Agente:* ' + m.agenteRecolhimento + '\n';
@@ -1093,14 +1422,14 @@ function gerarTextoRelatorio(m) {
   t += 'Status do veículo:\n';
   t += fmt(sv.comPlaca) + ' Com placa\n' + fmt(sv.semPlaca) + ' Sem placa\n';
   t += fmt(sv.comChave) + ' Com chave\n' + fmt(sv.semChave) + ' Sem chave\n';
-  t += fmt(sv.avarias) + ' Avarias visíveis\n\n';
+  t += fmt(sv.avarias) + ' Com avarias\n' + fmt(!sv.avarias) + ' Sem avarias\n\n';
   t += 'Situação na abordagem:\n';
-  ['Entregue voluntariamente', 'Resistência verbal — resolvida', 'Resistência física — resolvida', 'Ausente — recolhida no local', 'Terceiros entregaram', 'Ausente — não localizada']
-    .forEach(s => { t += fmt(m.situacao === s) + ' ' + s + '\n'; });
+  const situacoesRel = m.cliente === 'MOTTU' ? [...SITUACOES_BASE, 'Não localizado'] : [...SITUACOES_BASE];
+  situacoesRel.forEach(s => { t += fmt(m.situacao === s) + ' ' + s + '\n'; });
   t += '\nQuem estava com a moto:\n';
   ['Locatário', 'Familiar', 'Terceiro'].forEach(q => { t += fmt(m.quem === q) + ' ' + q + ' '; });
   t += '\n';
-  if (m.obs) t += '\nObservação: ' + m.obs + '\n';
+  if (m.obs) t += '\nObservação: ' + m.obs.toUpperCase() + '\n';
   t += '\n📸 Foto registrada: ' + ((m.fotos && m.fotos.length > 0) ? '☑ Sim' : '☐ Não') + '\n\n';
   t += m.status === 'nao_localizado' ? '❌ Veículo não localizado · BravoSeg' : '✅ Veículo recolhido · BravoSeg';
   if (m.status === 'devolvido') {
@@ -1113,7 +1442,12 @@ function gerarTextoRelatorio(m) {
 }
 
 function mostrarRelatorio(m) {
-  document.getElementById('relatorioTitulo').textContent = m.status === 'nao_localizado' ? 'Ocorrência — Não Localizado' : 'Relatório de Recolhimento';
+  const titulos = {
+    indisponivel: 'Ocorrência — Rastreador Indisponível',
+    resolvido: 'Caso Encerrado',
+    nao_localizado: 'Ocorrência — Não Localizado',
+  };
+  document.getElementById('relatorioTitulo').textContent = titulos[m.status] || (m.missaoInterior ? 'Recolhimento — Missão Interior' : 'Relatório de Recolhimento');
   document.getElementById('relatorioTexto').textContent = gerarTextoRelatorio(m);
   document.getElementById('modalRelatorio').classList.add('open');
 }
@@ -1135,6 +1469,33 @@ function copiarRelatorio() {
   }
 }
 
+// ===== RELATÓRIO INDISPONÍVEIS =====
+function gerarRelatorioIndisponivel() {
+  const rows = (motosCache[clienteAtual] || []).filter(r => r.status === 'indisponivel');
+  if (!rows.length) { showToast('Nenhum veículo indisponível'); return; }
+  const nomes = { MAVE: 'Mave Locadora', MOVVI: 'Movvi Locadora', LOCAGORA: 'Locagora', MOTTU: 'Mottu' };
+  const sitLabels = { sem_comunicacao: 'Sem comunicação', fora_de_area: 'Fora de área', fora_area_sem_sinal: 'Fora de área sem comunicação' };
+  const hoje = new Date().toLocaleDateString('pt-BR');
+  let txt = '📡 *RELATÓRIO — VEÍCULOS INDISPONÍVEIS · BravoSeg*\n';
+  txt += '*Cliente:* ' + (nomes[clienteAtual] || clienteAtual) + '\n';
+  txt += '📅 *Data:* ' + hoje + '\n';
+  txt += '━━━━━━━━━━━━━━━━\n\n';
+  rows.forEach((r, i) => {
+    txt += (i+1) + '. 🪧 *' + r.placa + '*\n';
+    if (r.modelo || r.cor) txt += '   🏍️ ' + [r.modelo, r.cor].filter(Boolean).join(' ') + '\n';
+    txt += '   📡 ' + (sitLabels[r.situacao] || r.situacao || '—') + '\n';
+    txt += '   📅 Registrado: ' + (r.data_recolhimento || '—') + '\n';
+    if (r.agente_recolhimento) txt += '   👤 Agente: ' + r.agente_recolhimento + '\n';
+    txt += '\n';
+  });
+  txt += '━━━━━━━━━━━━━━━━\n';
+  txt += '⚠️ *Total: ' + rows.length + ' veículo(s) aguardando autorização*\n\n';
+  txt += '_BravoSeg — Apoio Operacional_ 🛡️';
+  document.getElementById('relatorioTitulo').textContent = 'Veículos Indisponíveis';
+  document.getElementById('relatorioTexto').textContent = txt;
+  document.getElementById('modalRelatorio').classList.add('open');
+}
+
 // ===== FINANCEIRO =====
 function parseDateBR(s) {
   if (!s) return null;
@@ -1152,24 +1513,12 @@ function calcFinanceiro() {
   if (!tipoEl || !mesEl || !pdEl) return;
   const tipo = tipoEl.value;
   mesEl.style.display = tipo === 'personalizado' ? 'block' : 'none';
-
   const agora = new Date();
   let inicio, fim;
-  if (tipo === 'hoje') {
-    inicio = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate());
-    fim = new Date(inicio); fim.setDate(fim.getDate() + 1);
-  } else if (tipo === 'semana') {
-    const dow = agora.getDay() || 7;
-    inicio = new Date(agora); inicio.setDate(agora.getDate() - dow + 1); inicio.setHours(0, 0, 0, 0);
-    fim = new Date(inicio); fim.setDate(fim.getDate() + 7);
-  } else if (tipo === 'mes') {
-    inicio = new Date(agora.getFullYear(), agora.getMonth(), 1);
-    fim = new Date(agora.getFullYear(), agora.getMonth() + 1, 1);
-  } else {
-    const v = mesEl.value; if (!v) return;
-    const [y, mo] = v.split('-').map(Number);
-    inicio = new Date(y, mo - 1, 1); fim = new Date(y, mo, 1);
-  }
+  if (tipo === 'hoje') { inicio = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate()); fim = new Date(inicio); fim.setDate(fim.getDate() + 1); }
+  else if (tipo === 'semana') { const dow = agora.getDay() || 7; inicio = new Date(agora); inicio.setDate(agora.getDate() - dow + 1); inicio.setHours(0,0,0,0); fim = new Date(inicio); fim.setDate(fim.getDate() + 7); }
+  else if (tipo === 'mes') { inicio = new Date(agora.getFullYear(), agora.getMonth(), 1); fim = new Date(agora.getFullYear(), agora.getMonth() + 1, 1); }
+  else { const v = mesEl.value; if (!v) return; const [y, mo] = v.split('-').map(Number); inicio = new Date(y, mo-1, 1); fim = new Date(y, mo, 1); }
 
   pdEl.textContent = inicio.toLocaleDateString('pt-BR') + ' — ' + new Date(fim - 1).toLocaleDateString('pt-BR');
 
@@ -1198,8 +1547,8 @@ function calcFinanceiro() {
   document.getElementById('finValorDetalhe').textContent = det;
 
   let html = '';
-  if (inad.length) html += '<div class="fin-card" style="border-color:var(--laranja)"><div class="fin-card-title">Inadimplência (' + inad.length + ')</div>' + inad.map(r => '<div class="consol-item"><span class="consol-placa">' + r.placa + '</span><span class="consol-detail">' + (r.data_recolhimento || '—') + '</span></div>').join('') + '</div>';
-  if (furto.length) html += '<div class="fin-card" style="border-color:var(--vermelho)"><div class="fin-card-title">Furto/Roubo (' + furto.length + ')</div>' + furto.map(r => '<div class="consol-item"><span class="consol-placa">' + r.placa + '</span><span class="consol-detail">' + (r.data_recolhimento || '—') + '</span></div>').join('') + '</div>';
+  if (inad.length) html += '<div class="fin-card" style="border-color:var(--laranja)"><div class="fin-card-title">Inadimplência (' + inad.length + ')</div>' + inad.map(r => '<div class="consol-item"><span class="consol-placa">' + r.placa + '</span><span class="consol-detail">' + (r.data_recolhimento||'—') + '</span></div>').join('') + '</div>';
+  if (furto.length) html += '<div class="fin-card" style="border-color:var(--vermelho)"><div class="fin-card-title">Furto/Roubo (' + furto.length + ')</div>' + furto.map(r => '<div class="consol-item"><span class="consol-placa">' + r.placa + '</span><span class="consol-detail">' + (r.data_recolhimento||'—') + '</span></div>').join('') + '</div>';
   document.getElementById('finBreakdown').innerHTML = html;
   document.getElementById('btnConsolidado').style.display = clienteAtual === 'MAVE' ? 'block' : 'none';
 }
@@ -1212,32 +1561,28 @@ async function gerarRelatorioFinanceiro() {
   const tipo = tipoEl.value;
   const agora = new Date();
   let inicio, fim;
-  if (tipo === 'hoje') { inicio = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate()); fim = new Date(inicio); fim.setDate(fim.getDate() + 1); }
-  else if (tipo === 'semana') { const dow = agora.getDay() || 7; inicio = new Date(agora); inicio.setDate(agora.getDate() - dow + 1); inicio.setHours(0, 0, 0, 0); fim = new Date(inicio); fim.setDate(fim.getDate() + 7); }
-  else if (tipo === 'mes') { inicio = new Date(agora.getFullYear(), agora.getMonth(), 1); fim = new Date(agora.getFullYear(), agora.getMonth() + 1, 1); }
-  else { const v = document.getElementById('mesSelecionado').value; if (!v) { showToast('Selecione um período'); return; } const [y, mo] = v.split('-').map(Number); inicio = new Date(y, mo - 1, 1); fim = new Date(y, mo, 1); }
-
-  const rows = (motosCache[clienteAtual] || []).filter(r => {
-    if (!r.data_recolhimento) return false;
-    if (r.status !== 'recolhido' && r.status !== 'devolvido') return false;
+  if (tipo === 'hoje') { inicio = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate()); fim = new Date(inicio); fim.setDate(fim.getDate()+1); }
+  else if (tipo === 'semana') { const dow = agora.getDay()||7; inicio = new Date(agora); inicio.setDate(agora.getDate()-dow+1); inicio.setHours(0,0,0,0); fim = new Date(inicio); fim.setDate(fim.getDate()+7); }
+  else if (tipo === 'mes') { inicio = new Date(agora.getFullYear(), agora.getMonth(), 1); fim = new Date(agora.getFullYear(), agora.getMonth()+1, 1); }
+  else { const v = document.getElementById('mesSelecionado').value; if (!v) { showToast('Selecione um período'); return; } const [y,mo] = v.split('-').map(Number); inicio = new Date(y,mo-1,1); fim = new Date(y,mo,1); }
+  const rows = (motosCache[clienteAtual]||[]).filter(r => {
+    if (!r.data_recolhimento || (r.status !== 'recolhido' && r.status !== 'devolvido')) return false;
     const dt = parseDateBR(r.data_recolhimento);
     return dt && dt >= inicio && dt < fim;
   });
-  const vals = VALORES[clienteAtual] || {};
+  const vals = VALORES[clienteAtual]||{};
   const inad = rows.filter(r => r.tipo !== 'furto');
   const furto = rows.filter(r => r.tipo === 'furto');
   let total = 0;
   if (vals.inadimplencia) total += inad.length * vals.inadimplencia;
   if (vals.furto) total += furto.length * vals.furto;
   const nomes = { MAVE: 'Mave Locadora', MOVVI: 'Movvi Locadora', LOCAGORA: 'Locagora', MOTTU: 'Mottu' };
-
-  let txt = '📊 *RELATÓRIO FINANCEIRO · BravoSeg*\n\n*Cliente:* ' + (nomes[clienteAtual] || clienteAtual) + '\n📅 *Período:* ' + periodo + '\n━━━━━━━━━━━━━━━━\n\n';
-  if (inad.length) { txt += '🔸 *Inadimplência/Recolhimento*\nQuantidade: ' + inad.length + ' moto(s)\n'; if (vals.inadimplencia) txt += 'Valor unitário: R$' + vals.inadimplencia + '\nSubtotal: R$' + (inad.length * vals.inadimplencia).toLocaleString('pt-BR') + '\n'; inad.forEach(r => { txt += '  · ' + r.placa + ' — ' + (r.data_recolhimento || '—') + '\n'; }); txt += '\n'; }
-  if (furto.length) { txt += '🔴 *Furto/Roubo*\nQuantidade: ' + furto.length + ' moto(s)\n'; if (vals.furto) txt += 'Valor unitário: R$' + vals.furto + '\nSubtotal: R$' + (furto.length * vals.furto).toLocaleString('pt-BR') + '\n'; furto.forEach(r => { txt += '  · ' + r.placa + ' — ' + (r.data_recolhimento || '—') + '\n'; }); txt += '\n'; }
+  let txt = '📊 *RELATÓRIO FINANCEIRO · BravoSeg*\n\n*Cliente:* ' + (nomes[clienteAtual]||clienteAtual) + '\n📅 *Período:* ' + periodo + '\n━━━━━━━━━━━━━━━━\n\n';
+  if (inad.length) { txt += '🔸 *Inadimplência/Recolhimento*\nQuantidade: ' + inad.length + ' moto(s)\n'; if (vals.inadimplencia) txt += 'Valor unitário: R$' + vals.inadimplencia + '\nSubtotal: R$' + (inad.length * vals.inadimplencia).toLocaleString('pt-BR') + '\n'; inad.forEach(r => { txt += '  · ' + r.placa + ' — ' + (r.data_recolhimento||'—') + '\n'; }); txt += '\n'; }
+  if (furto.length) { txt += '🔴 *Furto/Roubo*\nQuantidade: ' + furto.length + ' moto(s)\n'; if (vals.furto) txt += 'Valor unitário: R$' + vals.furto + '\nSubtotal: R$' + (furto.length * vals.furto).toLocaleString('pt-BR') + '\n'; furto.forEach(r => { txt += '  · ' + r.placa + ' — ' + (r.data_recolhimento||'—') + '\n'; }); txt += '\n'; }
   txt += '━━━━━━━━━━━━━━━━\n✅ *Total: ' + rows.length + ' recolhimento(s)*\n';
   if (total > 0) txt += '💰 *Valor Total: R$' + total.toLocaleString('pt-BR') + '*\n';
   txt += '\n_BravoSeg — Apoio Operacional_ 🛡️';
-
   document.getElementById('relatorioTitulo').textContent = 'Relatório Financeiro';
   document.getElementById('relatorioTexto').textContent = txt;
   document.getElementById('modalRelatorio').classList.add('open');
@@ -1245,16 +1590,13 @@ async function gerarRelatorioFinanceiro() {
 
 function gerarConsolidadoDia() {
   const hoje = new Date().toLocaleDateString('pt-BR');
-  const rows = (motosCache['MAVE'] || []).filter(r =>
-    (r.status === 'recolhido' || r.status === 'devolvido') &&
-    (r.data_recolhimento === hoje || r.data_devolucao === hoje)
-  );
+  const rows = (motosCache['MAVE']||[]).filter(r => (r.status === 'recolhido'||r.status === 'devolvido') && (r.data_recolhimento === hoje || r.data_devolucao === hoje));
   if (!rows.length) { showToast('Nenhum recolhimento hoje'); return; }
   const dev = rows.filter(r => r.status === 'devolvido');
   const rec = rows.filter(r => r.status === 'recolhido');
   let txt = '📦 *RELATÓRIO DE ENTREGAS · BravoSeg*\n*Cliente:* Mave Locadora\n📅 *Data:* ' + hoje + '\n━━━━━━━━━━━━━━━━\n\n';
-  if (dev.length) { txt += '✅ *ENTREGUES NA BASE (' + dev.length + ')*\n\n'; dev.forEach(r => { txt += '🪧 *Placa:* ' + r.placa + '\n'; if (r.modelo || r.cor) txt += '🏍️ *Modelo/Cor:* ' + [r.modelo, r.cor].filter(Boolean).join(' ') + '\n'; txt += '🕐 *Entrega:* ' + (r.data_devolucao || r.data_recolhimento) + ' ' + (r.hora_devolucao || r.hora_recolhimento || '') + '\n'; if (r.dev_recebedor) txt += '👤 *Recebido por:* ' + r.dev_recebedor + '\n'; if (r.dev_local) txt += '📍 *Local:* ' + r.dev_local + '\n'; txt += '\n'; }); }
-  if (rec.length) { txt += '🔄 *AGUARDANDO DEVOLUÇÃO (' + rec.length + ')*\n\n'; rec.forEach(r => { txt += '🪧 *Placa:* ' + r.placa + '\n'; if (r.modelo || r.cor) txt += '🏍️ *Modelo/Cor:* ' + [r.modelo, r.cor].filter(Boolean).join(' ') + '\n'; txt += '🕐 *Recolhimento:* ' + (r.data_recolhimento || '—') + ' ' + (r.hora_recolhimento || '') + '\n'; if (r.local_abordagem) txt += '📍 *Local:* ' + r.local_abordagem + '\n'; txt += '\n'; }); }
+  if (dev.length) { txt += '✅ *ENTREGUES NA BASE (' + dev.length + ')*\n\n'; dev.forEach(r => { txt += '🪧 *Placa:* ' + r.placa + '\n'; if (r.modelo||r.cor) txt += '🏍️ *Modelo/Cor:* ' + [r.modelo,r.cor].filter(Boolean).join(' ') + '\n'; txt += '🕐 *Entrega:* ' + (r.data_devolucao||r.data_recolhimento) + ' ' + (r.hora_devolucao||r.hora_recolhimento||'') + '\n'; if (r.dev_recebedor) txt += '👤 *Recebido por:* ' + r.dev_recebedor + '\n'; if (r.dev_local) txt += '📍 *Local:* ' + r.dev_local + '\n'; txt += '\n'; }); }
+  if (rec.length) { txt += '🔄 *AGUARDANDO DEVOLUÇÃO (' + rec.length + ')*\n\n'; rec.forEach(r => { txt += '🪧 *Placa:* ' + r.placa + '\n'; if (r.modelo||r.cor) txt += '🏍️ *Modelo/Cor:* ' + [r.modelo,r.cor].filter(Boolean).join(' ') + '\n'; txt += '🕐 *Recolhimento:* ' + (r.data_recolhimento||'—') + ' ' + (r.hora_recolhimento||'') + '\n'; if (r.local_abordagem) txt += '📍 *Local:* ' + r.local_abordagem + '\n'; txt += '\n'; }); }
   txt += '━━━━━━━━━━━━━━━━\n📊 *Total: ' + rows.length + '* · ✅ Dev: ' + dev.length + ' · 🔄 Aguard: ' + rec.length + '\n\n_BravoSeg — Apoio Operacional_ 🛡️';
   document.getElementById('relatorioTitulo').textContent = 'Consolidado Diário — Mave';
   document.getElementById('relatorioTexto').textContent = txt;
@@ -1292,13 +1634,14 @@ function confirmarExclusao(id) {
 
 function confirmarUndo(id) {
   mostrarConfirm('Reverter status?', 'O status voltará para Pendente.', async () => {
-    const r = (motosCache[clienteAtual] || []).find(m => m.id === id);
+    const r = (motosCache[clienteAtual]||[]).find(m => m.id === id);
     if (!r) return;
     const m = rowParaMoto(r);
     m.status = 'pendente'; m.situacao = null; m.quem = null; m.local = null;
     m.dataRecolhimento = null; m.horaRecolhimento = null;
     m.dataDevolucao = null; m.horaDevolucao = null;
     m.devRecebedor = null; m.devLocal = null; m.fotos = [];
+    m.prioridade = false; m.motivoResolucao = null;
     await salvarMoto(m);
     renderLista();
     showToast('↩ Revertido para Pendente');
@@ -1311,20 +1654,12 @@ function mostrarConfirm(titulo, msg, cb) {
   confirmCallback = cb;
   document.getElementById('confirmOverlay').classList.add('open');
 }
-function confirmAccept() {
-  document.getElementById('confirmOverlay').classList.remove('open');
-  if (confirmCallback) confirmCallback();
-  confirmCallback = null;
-}
-function confirmReject() {
-  document.getElementById('confirmOverlay').classList.remove('open');
-  confirmCallback = null;
-}
+function confirmAccept() { document.getElementById('confirmOverlay').classList.remove('open'); if (confirmCallback) confirmCallback(); confirmCallback = null; }
+function confirmReject() { document.getElementById('confirmOverlay').classList.remove('open'); confirmCallback = null; }
 
 // ===== INIT =====
 async function iniciarApp() {
   document.getElementById('mesSelecionado').value = new Date().toISOString().slice(0, 7);
-  // Fecha modais ao clicar fora
   document.querySelectorAll('.modal-overlay').forEach(el => {
     el.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
   });
@@ -1333,7 +1668,6 @@ async function iniciarApp() {
   renderLista();
 }
 
-// ===== VISIBILITYCHANGE (memória) =====
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) {
     if (realtimeSub && sb) { try { sb.removeChannel(realtimeSub); } catch(e) {} realtimeSub = null; }
@@ -1343,18 +1677,13 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-// ===== SESSÃO PERSISTENTE =====
 document.addEventListener('DOMContentLoaded', () => {
   const salvo = localStorage.getItem('bravoseg_perfil');
-  if (salvo === 'agente' || salvo === 'gestor') {
-    entrar(salvo);
-  }
+  if (salvo === 'agente' || salvo === 'gestor') entrar(salvo);
 });
 
-// ===== SERVICE WORKER =====
 if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('./sw.js', { scope: '/BravoSeg-Recolhimentos/' })
-    .catch(e => console.warn('SW:', e));
+  navigator.serviceWorker.register('./sw.js', { scope: '/BravoSeg-Recolhimentos/' }).catch(e => console.warn('SW:', e));
 }
 </script>
 </body>
