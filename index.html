@@ -167,6 +167,9 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
 .login-erro{color:#ff4444;font-size:12px;margin-bottom:8px;display:none;}
 .login-perfil-badge{font-size:11px;color:var(--texto-sec);display:flex;align-items:center;gap:4px;cursor:pointer;}
 .login-perfil-badge span{color:var(--vermelho);font-weight:700;}
+.login-nome-wrap{display:none;margin-top:16px;}
+.login-nome-wrap.show{display:block;}
+.login-nome-hint{font-size:12px;color:var(--texto-sec);margin-bottom:8px;text-align:center;}
 </style>
 </head>
 <body>
@@ -178,8 +181,13 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
   <div class="login-card">
     <div class="login-title">Entrar como</div>
     <div class="login-btn-group">
-      <button class="login-btn login-btn-agente" onclick="entrarAgente()">👷 Agente</button>
+      <button class="login-btn login-btn-agente" onclick="mostrarNome()">👷 Agente</button>
       <button class="login-btn login-btn-gestor" onclick="mostrarSenha()">🔐 Gestor</button>
+    </div>
+    <div class="login-nome-wrap" id="loginNomeWrap">
+      <div class="login-nome-hint">Qual é o seu nome? Será registrado nos recolhimentos.</div>
+      <input class="login-senha-input" id="loginNomeInput" type="text" placeholder="Seu nome (ex: João, Marcos...)" maxlength="40" onkeydown="if(event.key==='Enter')confirmarNome()">
+      <button class="login-btn login-btn-agente" onclick="confirmarNome()">Entrar como Agente</button>
     </div>
     <div class="login-senha-wrap" id="loginSenhaWrap">
       <div class="login-erro" id="loginErro">Senha incorreta</div>
@@ -216,7 +224,7 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
     <div class="filter-chip active" onclick="setFilter('todos',this)">Todos</div>
     <div class="filter-chip" onclick="setFilter('pendente',this)">Pendentes</div>
     <div class="filter-chip" onclick="setFilter('recolhido',this)">Recolhidos</div>
-    <div class="filter-chip" onclick="setFilter('devolvido',this)">Devolvidos</div>
+    <div class="filter-chip" onclick="setFilter('devolvido',this)">Entregues</div>
     <div class="filter-chip" onclick="setFilter('nao_localizado',this)">Não Loc.</div>
   </div>
   <div id="listaContainer"><div class="loading"><div class="loading-spin">🔄</div><div style="margin-top:10px;font-size:13px;">Carregando...</div></div></div>
@@ -381,18 +389,18 @@ body{background:var(--preto);color:var(--branco);font-family:-apple-system,Blink
   </div>
 </div>
 
-<!-- MODAL DEVOLUÇÃO -->
+<!-- MODAL ENTREGA -->
 <div class="modal-overlay" id="modalDevolucao">
   <div class="modal-sheet">
     <div class="modal-handle"></div>
-    <div class="modal-title">Registrar Devolução</div>
+    <div class="modal-title">📦 Registrar Entrega</div>
     <div class="modal-placa" id="devPlaca">—</div>
     <div class="modal-sub" id="devSub">—</div>
     <div class="section-title">Quem Recebeu</div>
     <input class="local-input" id="devRecebedor" placeholder="Nome de quem recebeu na locadora..." style="margin-bottom:12px;">
-    <div class="section-title">Local de Devolução</div>
+    <div class="section-title">Local de Entrega</div>
     <input class="local-input" id="devLocal" placeholder="Ex: Locadora Mave Castanhal..." style="margin-bottom:12px;">
-    <button class="btn-full btn-primary" onclick="confirmarDevolucao()" style="margin-bottom:8px;">✅ Confirmar Devolução</button>
+    <button class="btn-full btn-primary" onclick="confirmarDevolucao()" style="margin-bottom:8px;">✅ Confirmar Entrega</button>
     <button class="btn-full btn-secondary" onclick="document.getElementById('modalDevolucao').classList.remove('open')">Cancelar</button>
   </div>
 </div>
@@ -443,6 +451,7 @@ const sb = window.supabase ? window.supabase.createClient(SURL, SKEY) : null;
 
 // ===== ESTADO =====
 let perfilAtual = null;
+let agenteNome = '';
 let clienteAtual = 'MAVE';
 let paginaAtual = 'Lista';
 let filtroAtual = 'todos';
@@ -520,13 +529,33 @@ async function confirmarSenha() {
   btn.disabled = false;
 }
 
-function entrarAgente() { entrar('agente'); }
+function mostrarNome() {
+  // Se já tem nome salvo, entra direto
+  const nomeSalvo = localStorage.getItem('bravoseg_agente_nome');
+  if (nomeSalvo) { agenteNome = nomeSalvo; entrar('agente'); return; }
+  document.getElementById('loginNomeWrap').classList.add('show');
+  document.getElementById('loginSenhaWrap').classList.remove('show');
+  setTimeout(() => document.getElementById('loginNomeInput').focus(), 100);
+}
 
-function entrar(perfil) {
+function confirmarNome() {
+  const inp = document.getElementById('loginNomeInput');
+  const nome = inp.value.trim();
+  if (!nome) { inp.style.borderColor = '#ff4444'; setTimeout(() => inp.style.borderColor = '#444', 1500); return; }
+  agenteNome = nome;
+  localStorage.setItem('bravoseg_agente_nome', nome);
+  entrar('agente');
+}
+
+function entrar(perfil, opts) {
   perfilAtual = perfil;
   localStorage.setItem('bravoseg_perfil', perfil);
+  if (perfil === 'agente') {
+    agenteNome = agenteNome || localStorage.getItem('bravoseg_agente_nome') || '';
+  }
   document.getElementById('loginOverlay').style.display = 'none';
-  document.getElementById('perfilLabel').textContent = perfil === 'gestor' ? 'Gestor' : 'Agente';
+  const label = perfil === 'gestor' ? 'Gestor' : (agenteNome || 'Agente');
+  document.getElementById('perfilLabel').textContent = label;
   // Gestor vê tudo; Agente só vê Lista
   const exibir = perfil === 'gestor';
   document.getElementById('navFinanceiro').style.display = exibir ? '' : 'none';
@@ -537,13 +566,22 @@ function entrar(perfil) {
 function sair() {
   perfilAtual = null;
   localStorage.removeItem('bravoseg_perfil');
-  // Limpa senha
+  // Limpa campos de login
   document.getElementById('loginSenhaWrap').classList.remove('show');
+  document.getElementById('loginNomeWrap').classList.remove('show');
   document.getElementById('loginSenhaInput').value = '';
+  document.getElementById('loginNomeInput').value = '';
   document.getElementById('loginErro').style.display = 'none';
   // Desconecta realtime
   if (realtimeSub && sb) { try { sb.removeChannel(realtimeSub); } catch(e) {} realtimeSub = null; }
   document.getElementById('loginOverlay').style.display = 'flex';
+}
+
+function trocarAgente() {
+  // Permite trocar o nome do agente sem sair
+  localStorage.removeItem('bravoseg_agente_nome');
+  agenteNome = '';
+  sair();
 }
 
 // ===== SUPABASE CRUD =====
@@ -644,6 +682,7 @@ function motoParaRow(m) {
     data_cadastro: m.dataCadastro || null,
     reincidencia: m.reincidencia || 0,
     ultima_recuperacao: m.ultimaRecuperacao || null,
+    agente_recolhimento: m.agenteRecolhimento || null,
   };
 }
 
@@ -671,6 +710,7 @@ function rowParaMoto(r) {
     dataCadastro: r.data_cadastro,
     reincidencia: r.reincidencia || 0,
     ultimaRecuperacao: r.ultima_recuperacao,
+    agenteRecolhimento: r.agente_recolhimento,
   };
 }
 
@@ -750,7 +790,7 @@ async function carregarERendar() {
 
 // ===== LISTA =====
 function statusLabel(s) {
-  return { pendente: 'Pendente', recolhido: 'Recolhido', devolvido: 'Devolvido', nao_localizado: 'Não Loc.' }[s] || s;
+  return { pendente: 'Pendente', recolhido: 'Recolhido', devolvido: 'Entregue', nao_localizado: 'Não Loc.' }[s] || s;
 }
 function statusClass(s) {
   return { pendente: 'status-pendente', recolhido: 'status-recolhido', devolvido: 'status-devolvido', nao_localizado: 'status-nao-loc' }[s] || 'status-pendente';
@@ -783,7 +823,7 @@ function renderLista() {
       btns = '<button class="btn-sm btn-primary" onclick="abrirRecolhimento(\'' + m.id + '\')">📋 Registrar</button>' +
              '<button class="btn-sm btn-secondary" onclick="confirmarExclusao(\'' + m.id + '\')">🗑️</button>';
     } else if (m.status === 'recolhido' && clienteAtual === 'MAVE') {
-      btns = '<button class="btn-sm btn-green" onclick="abrirDevolucao(\'' + m.id + '\')">📦 Devolver</button>' +
+      btns = '<button class="btn-sm btn-green" onclick="abrirDevolucao(\'' + m.id + '\')">📦 Fazer Entrega</button>' +
              '<button class="btn-sm btn-blue" onclick="verRelatorio(\'' + m.id + '\')">📋 Ver</button>' +
              '<button class="btn-sm btn-secondary" onclick="confirmarUndo(\'' + m.id + '\')">↩</button>';
     } else {
@@ -793,7 +833,8 @@ function renderLista() {
     const info = [];
     if (m.dataRecolhimento) info.push('📅 ' + m.dataRecolhimento);
     if (m.local) info.push('📍 ' + m.local);
-    if (m.devRecebedor) info.push('👤 ' + m.devRecebedor);
+    if (m.agenteRecolhimento) info.push('👷 ' + m.agenteRecolhimento);
+    if (m.devRecebedor) info.push('📦 Entregue: ' + m.devRecebedor);
     return '<div class="card">' +
       '<div class="card-header">' +
         '<div><div class="placa">' + m.placa + ' ' + tipoBadge + '</div>' +
@@ -878,21 +919,21 @@ function fecharModal() {
   motoAtual = null;
 }
 
-function liberarFotos() {
-  fotosCapturadas.forEach(f => { try { URL.revokeObjectURL(f.url); } catch(e) {} });
-  fotosCapturadas = [];
-}
-
 // ===== FOTOS =====
 function processarFotos(event) {
-  Array.from(event.target.files).forEach(file => {
+  const files = Array.from(event.target.files);
+  event.target.value = '';
+  files.forEach(file => {
     const agora = new Date();
     const ts = agora.toLocaleDateString('pt-BR') + ' ' + agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    const url = URL.createObjectURL(file);
-    fotosCapturadas.push({ url, file, timestamp: ts });
-    renderFotoPreview();
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      // base64 — sobrevive ao suspend do iOS ao abrir câmera
+      fotosCapturadas.push({ base64: e.target.result, mime: file.type || 'image/jpeg', file, timestamp: ts });
+      renderFotoPreview();
+    };
+    reader.readAsDataURL(file);
   });
-  event.target.value = '';
 }
 
 function renderFotoPreview() {
@@ -900,7 +941,7 @@ function renderFotoPreview() {
   if (!cont) return;
   cont.innerHTML = fotosCapturadas.map((f, i) =>
     '<div class="foto-thumb-wrap" onclick="compartilharFoto(' + i + ')" style="cursor:pointer;">' +
-      '<img class="foto-thumb" src="' + f.url + '">' +
+      '<img class="foto-thumb" src="' + f.base64 + '">' +
       '<div class="foto-ts">' + f.timestamp + '</div>' +
       '<button class="foto-remove" onclick="event.stopPropagation();removerFoto(' + i + ')">×</button>' +
     '</div>'
@@ -909,25 +950,45 @@ function renderFotoPreview() {
 
 function removerFoto(i) {
   if (i < 0 || i >= fotosCapturadas.length) return;
-  try { URL.revokeObjectURL(fotosCapturadas[i].url); } catch(e) {}
   fotosCapturadas.splice(i, 1);
   renderFotoPreview();
+}
+
+function liberarFotos() {
+  fotosCapturadas = [];
 }
 
 async function compartilharFoto(i) {
   const f = fotosCapturadas[i];
   if (!f) return;
+  const placa = motoAtual ? motoAtual.placa : '';
+  const modelo = motoAtual ? ([motoAtual.modelo, motoAtual.cor].filter(Boolean).join(' ')) : '';
+  const agente = agenteNome || (perfilAtual === 'gestor' ? 'Gestor' : '');
+  const texto = '📸 BravoSeg · ' + (placa || 'Recolhimento') + (modelo ? ' · ' + modelo : '') + '\n📅 ' + f.timestamp + (agente ? '\n👤 Agente: ' + agente : '');
+  const nome = 'BravoSeg_' + f.timestamp.replace(/[/:]/g, '-').replace(/ /g, '_') + '.jpg';
   try {
-    const nome = 'BravoSeg_' + f.timestamp.replace(/[/:]/g, '-').replace(/ /g, '_') + '.jpg';
-    const fileObj = new File([f.file], nome, { type: f.file.type || 'image/jpeg' });
+    // Converte base64 → Blob → File para share/download
+    const res = await fetch(f.base64);
+    const blob = await res.blob();
+    const fileObj = new File([blob], nome, { type: f.mime });
     if (navigator.share && navigator.canShare && navigator.canShare({ files: [fileObj] })) {
-      await navigator.share({ files: [fileObj], title: 'BravoSeg Recolhimento', text: '📸 ' + f.timestamp });
-    } else {
-      const a = document.createElement('a');
-      a.href = f.url; a.download = nome; a.click();
+      await navigator.share({ files: [fileObj], title: 'BravoSeg Recolhimento', text: texto });
+      return;
     }
-  } catch (e) {
-    if (e.name !== 'AbortError') showToast('Erro ao compartilhar');
+  } catch(e) {
+    if (e.name === 'AbortError') return;
+  }
+  // Fallback iOS/desktop: download direto via base64
+  try {
+    const a = document.createElement('a');
+    a.href = f.base64;
+    a.download = nome;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    showToast('📥 Baixando imagem...', 2000);
+  } catch(e2) {
+    showToast('Erro ao baixar. Toque e segure a imagem para salvar.', 4000);
   }
 }
 
@@ -946,6 +1007,7 @@ async function confirmarRecolhimento() {
   motoAtual.status = naoLoc ? 'nao_localizado' : 'recolhido';
   motoAtual.situacao = sitEl.value;
   motoAtual.quem = quemEl ? quemEl.value : null;
+  motoAtual.agenteRecolhimento = agenteNome || (perfilAtual === 'gestor' ? 'Gestor' : '');
   motoAtual.local = document.getElementById('modalLocal').value.trim();
   motoAtual.obs = document.getElementById('modalObs').value.trim();
   motoAtual.dataRecolhimento = agora.toLocaleDateString('pt-BR');
@@ -1009,7 +1071,7 @@ async function confirmarDevolucao() {
   await salvarMoto(motoAtual);
   motoAtual = null;
   renderLista();
-  showUndoBar('Devolução registrada');
+  showUndoBar('Entrega registrada');
 }
 
 // ===== RELATÓRIO =====
@@ -1025,7 +1087,9 @@ function gerarTextoRelatorio(m) {
   if (m.modelo || m.cor) t += '🏍️ *Modelo/Cor:* ' + [m.modelo, m.cor].filter(Boolean).join(' ') + '\n';
   t += '📍 *Local:* ' + (m.local || '—') + '\n';
   t += '📅 *Data:* ' + (m.dataRecolhimento || '—') + '\n';
-  t += '🕐 *Horário:* ' + (m.horaRecolhimento || '—') + '\n\n';
+  t += '🕐 *Horário:* ' + (m.horaRecolhimento || '—') + '\n';
+  if (m.agenteRecolhimento) t += '👤 *Agente:* ' + m.agenteRecolhimento + '\n';
+  t += '\n';
   t += 'Status do veículo:\n';
   t += fmt(sv.comPlaca) + ' Com placa\n' + fmt(sv.semPlaca) + ' Sem placa\n';
   t += fmt(sv.comChave) + ' Com chave\n' + fmt(sv.semChave) + ' Sem chave\n';
@@ -1040,7 +1104,7 @@ function gerarTextoRelatorio(m) {
   t += '\n📸 Foto registrada: ' + ((m.fotos && m.fotos.length > 0) ? '☑ Sim' : '☐ Não') + '\n\n';
   t += m.status === 'nao_localizado' ? '❌ Veículo não localizado · BravoSeg' : '✅ Veículo recolhido · BravoSeg';
   if (m.status === 'devolvido') {
-    t += '\n\n📦 *DEVOLUÇÃO REGISTRADA*\n';
+    t += '\n\n📦 *ENTREGA REGISTRADA*\n';
     t += '📍 Local: ' + (m.devLocal || '—') + '\n';
     if (m.devRecebedor) t += '👤 Recebido por: ' + m.devRecebedor + '\n';
     t += '🕐 Horário: ' + (m.dataDevolucao || '') + ' ' + (m.horaDevolucao || '');
@@ -1188,8 +1252,8 @@ function gerarConsolidadoDia() {
   if (!rows.length) { showToast('Nenhum recolhimento hoje'); return; }
   const dev = rows.filter(r => r.status === 'devolvido');
   const rec = rows.filter(r => r.status === 'recolhido');
-  let txt = '📦 *RELATÓRIO DE DEVOLUÇÃO · BravoSeg*\n*Cliente:* Mave Locadora\n📅 *Data:* ' + hoje + '\n━━━━━━━━━━━━━━━━\n\n';
-  if (dev.length) { txt += '✅ *DEVOLVIDAS NA BASE (' + dev.length + ')*\n\n'; dev.forEach(r => { txt += '🪧 *Placa:* ' + r.placa + '\n'; if (r.modelo || r.cor) txt += '🏍️ *Modelo/Cor:* ' + [r.modelo, r.cor].filter(Boolean).join(' ') + '\n'; txt += '🕐 *Entrega:* ' + (r.data_devolucao || r.data_recolhimento) + ' ' + (r.hora_devolucao || r.hora_recolhimento || '') + '\n'; if (r.dev_recebedor) txt += '👤 *Recebido por:* ' + r.dev_recebedor + '\n'; if (r.dev_local) txt += '📍 *Local:* ' + r.dev_local + '\n'; txt += '\n'; }); }
+  let txt = '📦 *RELATÓRIO DE ENTREGAS · BravoSeg*\n*Cliente:* Mave Locadora\n📅 *Data:* ' + hoje + '\n━━━━━━━━━━━━━━━━\n\n';
+  if (dev.length) { txt += '✅ *ENTREGUES NA BASE (' + dev.length + ')*\n\n'; dev.forEach(r => { txt += '🪧 *Placa:* ' + r.placa + '\n'; if (r.modelo || r.cor) txt += '🏍️ *Modelo/Cor:* ' + [r.modelo, r.cor].filter(Boolean).join(' ') + '\n'; txt += '🕐 *Entrega:* ' + (r.data_devolucao || r.data_recolhimento) + ' ' + (r.hora_devolucao || r.hora_recolhimento || '') + '\n'; if (r.dev_recebedor) txt += '👤 *Recebido por:* ' + r.dev_recebedor + '\n'; if (r.dev_local) txt += '📍 *Local:* ' + r.dev_local + '\n'; txt += '\n'; }); }
   if (rec.length) { txt += '🔄 *AGUARDANDO DEVOLUÇÃO (' + rec.length + ')*\n\n'; rec.forEach(r => { txt += '🪧 *Placa:* ' + r.placa + '\n'; if (r.modelo || r.cor) txt += '🏍️ *Modelo/Cor:* ' + [r.modelo, r.cor].filter(Boolean).join(' ') + '\n'; txt += '🕐 *Recolhimento:* ' + (r.data_recolhimento || '—') + ' ' + (r.hora_recolhimento || '') + '\n'; if (r.local_abordagem) txt += '📍 *Local:* ' + r.local_abordagem + '\n'; txt += '\n'; }); }
   txt += '━━━━━━━━━━━━━━━━\n📊 *Total: ' + rows.length + '* · ✅ Dev: ' + dev.length + ' · 🔄 Aguard: ' + rec.length + '\n\n_BravoSeg — Apoio Operacional_ 🛡️';
   document.getElementById('relatorioTitulo').textContent = 'Consolidado Diário — Mave';
